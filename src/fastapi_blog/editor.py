@@ -1,0 +1,301 @@
+import pathlib
+from typing import Any, Optional
+
+import jinja2
+import yaml
+from fastapi import APIRouter, FastAPI, HTTPException, Path, Request, status, Depends
+from fastapi.responses import HTMLResponse, JSONResponse
+from fastapi.templating import Jinja2Templates
+
+from . import helpers
+from .models import (
+    SLUG_PATTERN,
+    LoosePostPayload,
+    StrictPostPayload,
+    is_valid_slug,
+    payload_model,
+)
+
+
+async def require_authentication(request: Request) -> dict:
+    """Require authentication via session (admin) or JWT token.
+    
+    Checks:
+    1. Session cookie (starlette-admin)
+    2. JWT token in cookie or Authorization header (external auth system)
+    
+    Returns:
+        dict with user info if authenticated
+    
+    Raises:
+        HTTPException 401 if not authenticated
+    """
+    # Check session cookie (admin panel)
+    user = request.session.get('user')
+    if user:
+        return {'username': user, 'is_admin': request.session.get('is_admin', False)}
+    
+    # Check JWT token (if external auth is configured)
+    try:
+        # Try to get token from cookie
+        token = request.cookies.get('access_token')
+        if token and token.startswith('Bearer '):
+            token = token[7:]
+        
+        # Try Authorization header if no cookie
+        if not token:
+            auth_header = request.headers.get('Authorization')
+            if auth_header and auth_header.startswith('Bearer '):
+                token = auth_header[7:]
+        
+        if token:
+            # Import here to avoid circular dependency
+            try:
+                import jwt
+                from backend.auth.config import SECRET_KEY, ALGORITHM
+                from backend.auth.models import User
+                
+                payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+                email = payload.get('sub')
+                if email:
+                    user_obj = User.get_by_email(email)
+                    if user_obj and user_obj.is_active:
+                        return {'username': email, 'is_admin': True}
+            except (ImportError, jwt.JWTError, AttributeError):
+                pass
+    except Exception:
+        pass
+    
+    raise HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail='Authentication required',
+        headers={'WWW-Authenticate': 'Bearer'},
+    )
+
+
+def _post_path(slug: str, posts_dirname: str) -> pathlib.Path:
+    if not is_valid_slug(slug):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid slug. Allowed: lowercase letters, digits, hyphens (max 100).",
+        )
+    return pathlib.Path(posts_dirname) / f"{slug}.md"
+
+
+def _serialize(payload: StrictPostPayload | LoosePostPayload) -> str:
+    fm_dump = payload.frontmatter.model_dump(exclude_none=True)
+    fm_yaml = yaml.safe_dump(fm_dump, sort_keys=False, allow_unicode=True)
+    return f"---\n{fm_yaml}---\n\n{payload.content.rstrip()}\n"
+
+
+def _parse_file(path: pathlib.Path) -> dict[str, Any]:
+    raw = path.read_text()
+    parts = raw.split("---")
+    if len(parts) < 3:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Post file is malformed: {path.name}",
+        )
+    try:
+        frontmatter = yaml.safe_load(parts[1]) or {}
+    except yaml.YAMLError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Invalid YAML in {path.name}: {exc}",
+        ) from exc
+    content = "---".join(parts[2:]).lstrip("\n")
+    return {"frontmatter": frontmatter, "content": content}
+
+
+def add_editor_to_app(
+    app: FastAPI,
+    prefix: str = "/api/posts",
+    posts_dirname: str = "posts",
+    strict: bool = True,
+    ui: bool = True,
+    ui_prefix: str = "/admin/editor",
+) -> FastAPI:
+    api_router = APIRouter(prefix=prefix, tags=["editor"])
+    Payload = payload_model(strict)
+    slug_path = Path(pattern=SLUG_PATTERN, max_length=100)
+
+    @api_router.get("/{slug}/raw")
+    async def get_raw(slug: str = slug_path) -> dict[str, Any]:
+        path = _post_path(slug, posts_dirname)
+        if not path.is_file():
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Post '{slug}' not found",
+            )
+        data = _parse_file(path)
+        return {"slug": slug, **data}
+
+    @api_router.post("/create/{slug}", status_code=status.HTTP_201_CREATED)
+    async def create_post(
+        payload: Payload,  # type: ignore[valid-type]
+        slug: str = slug_path,
+        user: dict = Depends(require_authentication),
+    ) -> dict[str, str]:
+        path = _post_path(slug, posts_dirname)
+        if path.exists():
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail=f"Post '{slug}' already exists",
+            )
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(_serialize(payload))
+        helpers.list_posts.cache_clear()
+        return {"slug": slug, "status": "created"}
+
+    @api_router.put("/update/{slug}")
+    async def update_post(
+        payload: Payload,  # type: ignore[valid-type]
+        slug: str = slug_path,
+        user: dict = Depends(require_authentication),
+    ) -> dict[str, str]:
+        path = _post_path(slug, posts_dirname)
+        if not path.is_file():
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Post '{slug}' not found",
+            )
+        path.write_text(_serialize(payload))
+        helpers.list_posts.cache_clear()
+        return {"slug": slug, "status": "updated"}
+
+    @api_router.delete("/delete/{slug}")
+    async def delete_post(
+        slug: str = slug_path,
+        user: dict = Depends(require_authentication),
+    ) -> JSONResponse:
+        path = _post_path(slug, posts_dirname)
+        if not path.is_file():
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Post '{slug}' not found",
+            )
+        path.unlink()
+        helpers.list_posts.cache_clear()
+        return JSONResponse({"slug": slug, "status": "deleted"})
+
+    @api_router.post("/save")
+    async def save_post(
+        data: dict[str, Any],
+        user: dict = Depends(require_authentication),
+    ) -> dict[str, str]:
+        """Save (create or update) a post. Used by admin panel.
+        
+        Expects:
+            {
+                "slug": "post-slug",
+                "frontmatter": {...},
+                "content": "..."
+            }
+        """
+        slug = data.get('slug')
+        if not slug:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Slug is required",
+            )
+        
+        frontmatter = data.get('frontmatter', {})
+        content = data.get('content', '')
+        
+        # Create payload using the model
+        try:
+            payload = Payload(frontmatter=frontmatter, content=content)  # type: ignore[call-arg]
+        except Exception as e:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Invalid payload: {str(e)}",
+            )
+        
+        path = _post_path(slug, posts_dirname)
+        existed = path.exists()
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(_serialize(payload))
+        helpers.list_posts.cache_clear()
+        
+        return {"slug": slug, "status": "updated" if existed else "created"}
+
+    app.include_router(api_router)
+
+    if ui:
+        _add_ui_routes(
+            app,
+            api_prefix=prefix,
+            ui_prefix=ui_prefix,
+            posts_dirname=posts_dirname,
+            strict=strict,
+        )
+
+    return app
+
+
+def _add_ui_routes(
+    app: FastAPI,
+    api_prefix: str,
+    ui_prefix: str,
+    posts_dirname: str,
+    strict: bool,
+) -> None:
+    env = jinja2.Environment(
+        loader=jinja2.PackageLoader("fastapi_blog", "templates"),
+        autoescape=jinja2.select_autoescape(["html", "xml"]),
+    )
+    templates = Jinja2Templates(env=env)
+    ui_router = APIRouter(prefix=ui_prefix, tags=["editor-ui"])
+    slug_path = Path(pattern=SLUG_PATTERN, max_length=100)
+
+    def _context(**extra: Any) -> dict[str, Any]:
+        return {"admin_prefix": ui_prefix, "api_prefix": api_prefix, **extra}
+
+    @ui_router.get("/", response_class=HTMLResponse)
+    async def editor_index(request: Request) -> Any:
+        posts = helpers.list_posts(
+            posts_dirname=posts_dirname, strict=strict, published=True
+        )
+        drafts = helpers.list_posts(
+            posts_dirname=posts_dirname, strict=strict, published=False
+        )
+        return templates.TemplateResponse(
+            request=request,
+            name="admin/list.html",
+            context=_context(posts=list(posts) + list(drafts)),
+        )
+
+    @ui_router.get("/new", response_class=HTMLResponse)
+    async def editor_new(request: Request) -> Any:
+        return templates.TemplateResponse(
+            request=request,
+            name="admin/edit.html",
+            context=_context(
+                is_new=True,
+                slug="",
+                frontmatter={"title": "", "date": "", "tags": [], "published": False},
+                content="",
+            ),
+        )
+
+    @ui_router.get("/{slug}", response_class=HTMLResponse)
+    async def editor_edit(request: Request, slug: str = slug_path) -> Any:
+        path = _post_path(slug, posts_dirname)
+        if not path.is_file():
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Post '{slug}' not found",
+            )
+        data = _parse_file(path)
+        return templates.TemplateResponse(
+            request=request,
+            name="admin/edit.html",
+            context=_context(
+                is_new=False,
+                slug=slug,
+                frontmatter=data["frontmatter"],
+                content=data["content"],
+            ),
+        )
+
+    app.include_router(ui_router)

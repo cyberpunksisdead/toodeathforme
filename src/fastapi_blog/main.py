@@ -1,0 +1,49 @@
+from typing import Any
+
+import jinja2
+from fastapi import FastAPI
+from fastapi.templating import Jinja2Templates
+
+from .router import get_blog_router
+
+
+def add_blog_to_fastapi(
+    app: FastAPI,
+    prefix: str | None = "blog",
+    jinja2_loader: jinja2.BaseLoader = jinja2.PackageLoader(
+        "fastapi_blog", "templates"
+    ),
+    jinja2_extensions: set[str] = {
+        "jinja2_time.TimeExtension",
+        "jinja2.ext.debug",
+    },
+    favorite_post_ids: set[str] = set(),
+    mount_statics: bool = True,
+    strict_frontmatter: bool = True,
+    sanitize_html: bool = True,
+    posts_dirname: str = "posts",
+    pages_dirname: str = "pages",
+) -> FastAPI:
+    # Prep the templates
+    env = jinja2.Environment(
+        loader=jinja2_loader,
+        extensions=list(jinja2_extensions),
+        autoescape=jinja2.select_autoescape(["html", "xml"]),
+    )
+    templates = Jinja2Templates(env=env)
+
+    # Router controls
+    router = get_blog_router(
+        templates=templates,
+        favorite_post_ids=favorite_post_ids,
+        strict=strict_frontmatter,
+        sanitize_html=sanitize_html,
+        posts_dirname=posts_dirname,
+        pages_dirname=pages_dirname,
+    )
+    router_kwargs: dict[str, Any] = {"router": router, "tags": ["blog"]}
+    if prefix is not None:
+        router_kwargs["prefix"] = f"/{prefix}"
+    app.include_router(**router_kwargs)
+
+    return app
