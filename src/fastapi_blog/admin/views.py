@@ -3,6 +3,9 @@
 from typing import Any
 
 from starlette.requests import Request
+from starlette.responses import Response
+from starlette.templating import Jinja2Templates
+from starlette_admin import CustomView
 from starlette_admin.contrib.sqla import ModelView
 
 
@@ -111,3 +114,54 @@ class PostModelView(ModelView):
         "content": {"widget": "textarea", "rows": 20},
         "description": {"widget": "textarea", "rows": 3},
     }
+
+
+class HomeView(CustomView):
+    """Custom home view with blog statistics and recent posts.
+
+    Displays:
+    - Latest published posts
+    - Blog statistics (total posts, published, drafts, tags)
+    - Top tags by usage
+    """
+
+    async def render(self, request: Request, templates: Jinja2Templates) -> Response:
+        """Render custom home page with blog statistics."""
+        from ..markdown_model import MarkdownPost
+
+        # Get all posts
+        all_posts = MarkdownPost.list_all()
+
+        # Filter published posts
+        published_posts = [p for p in all_posts if p.published]
+        draft_posts = [p for p in all_posts if not p.published]
+
+        # Get latest posts (sorted by date, descending)
+        latest_posts = sorted(published_posts, key=lambda p: p.date, reverse=True)[:10]
+
+        # Collect all tags
+        all_tags: dict[str, int] = {}
+        for post in all_posts:
+            for tag in post.tags:
+                all_tags[tag] = all_tags.get(tag, 0) + 1
+
+        # Top tags (sorted by usage)
+        top_tags = sorted(all_tags.items(), key=lambda x: x[1], reverse=True)[:10]
+
+        # Statistics
+        stats = {
+            "total_posts": len(all_posts),
+            "published_posts": len(published_posts),
+            "draft_posts": len(draft_posts),
+            "total_tags": len(all_tags),
+        }
+
+        return templates.TemplateResponse(
+            "home.html",
+            {
+                "request": request,
+                "posts": latest_posts,
+                "stats": stats,
+                "top_tags": top_tags,
+            },
+        )

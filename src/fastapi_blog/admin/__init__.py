@@ -17,7 +17,7 @@ from .auth_provider import SimpleAuthProvider
 from .database import create_engine_and_session, init_db
 from .fields import MarkdownField, SlugField, TagsField
 from .models import Post, User
-from .views import PostModelView, UserModelView
+from .views import HomeView, PostModelView, UserModelView
 
 
 # File-based views removed - using CustomView instead
@@ -29,6 +29,7 @@ __all__ = [
     "SimpleAuthProvider",
     "UserModelView",
     "PostModelView",
+    "HomeView",
     "MarkdownField",
     "TagsField",
     "SlugField",
@@ -181,6 +182,7 @@ def add_admin_to_app(
         templates_dir=templates_dir,
         i18n_config=i18n_config,
         debug=os.getenv("DEBUG", "false").lower() == "true",
+        index_view=HomeView(label="Home", icon="fa fa-home"),
     )
 
     # Add model views
