@@ -57,5 +57,33 @@ run_prefix_none:
 run_favorite_post_ids:
 	cd tests/examples && uvicorn favorite_post_ids:app --reload
 
+# Create data directory for examples
+setup_examples:
+	mkdir -p tests/examples/data
+
 run_editor:
-	cd tests/examples && uvicorn editor:app --reload
+	cd tests/examples && mkdir -p data && uvicorn editor:app --reload
+
+run_quickstart:
+	@echo "\n🚀 Starting FastAPI Blog - Quickstart Example\n"
+	@echo "📍 Admin Panel: http://localhost:8000/admin"
+	@echo "🔑 Login: admin / Admin123!\n"
+	cd tests/examples && mkdir -p data && uvicorn quickstart:app --reload
+
+run_admin_roles:
+	@echo "\n🚀 Starting FastAPI Blog - Admin with RBAC\n"
+	@echo "📍 Admin Panel: http://localhost:8000/admin"
+	@echo "🔑 Users: admin/Admin123!, editor/Editor123!, viewer/Viewer123!\n"
+	cd tests/examples && mkdir -p data && uvicorn admin_with_roles:app --reload
+
+run_admin_i18n:
+	@echo "\n🚀 Starting FastAPI Blog - Admin with i18n (EN/RU)\n"
+	@echo "📍 Admin Panel: http://localhost:8000/admin"
+	@echo "🌍 Languages: English, Русский\n"
+	cd tests/examples && mkdir -p data && uvicorn admin_i18n:app --reload
+
+run_admin_full:
+	@echo "\n🚀 Starting FastAPI Blog - Full Featured Example\n"
+	@echo "📍 Admin Panel: http://localhost:8000/admin"
+	@echo "✨ Features: i18n, custom fields, roles\n"
+	cd tests/examples && mkdir -p data && uvicorn admin_full_featured:app --reload

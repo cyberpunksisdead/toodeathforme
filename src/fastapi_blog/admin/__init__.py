@@ -121,14 +121,31 @@ def add_admin_to_app(
         # Store engine for later access
         app.state.admin_engine = engine
 
-        # Add startup event to initialize database
-        @app.on_event("startup")
-        async def init_admin_db():
-            """Initialize admin database on startup."""
-            init_db(engine)
+        # Use lifespan event for async initialization (modern approach)
+        from contextlib import asynccontextmanager
+
+        # Check if app already has a lifespan
+        original_lifespan = getattr(app.router, "lifespan_context", None)
+
+        @asynccontextmanager
+        async def admin_lifespan(app):
+            # Startup: initialize database
+            await init_db(engine)
             print("✓ Admin database initialized")
             print(f"✓ Admin panel: http://localhost:8000{base_url}")
             print(f"✓ Login: username='{admin_username}' password='{admin_password}'")
+
+            # Call original lifespan if exists
+            if original_lifespan:
+                async with original_lifespan(app):
+                    yield
+            else:
+                yield
+
+            # Shutdown: cleanup if needed
+
+        # Replace app's lifespan
+        app.router.lifespan_context = admin_lifespan
 
     # Create auth provider
     auth_provider = SimpleAuthProvider(

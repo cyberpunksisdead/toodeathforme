@@ -67,6 +67,7 @@ class MarkdownField(TextAreaField):
             # Render markdown to HTML in detail view
             import markdown
             from markupsafe import Markup
+
             return Markup(markdown.markdown(Markup.escape(value)))
         return value
 

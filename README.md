@@ -2,44 +2,95 @@
 
 A simple, easy-to-use blog application built with FastAPI.
 
+## 🚀 Quick Start
+
+```bash
+# Clone and install
+git clone https://github.com/awestley/fastapi-blog.git
+cd fastapi-blog
+make install
+
+# Run demo
+./demo.sh quickstart
+```
+
+Then open http://localhost:8000/admin (login: `admin` / `Admin123!`)
+
+📚 **[See Full Quick Start Guide](QUICKSTART.md)** - includes all examples and detailed instructions
+
+---
+
 ## Features
 
-- 📝 Write blog posts in Markdown
+### Blog Features
+- 📝 Write blog posts in Markdown with YAML frontmatter
 - 🎨 Syntax highlighting for code blocks
 - 📱 Responsive design
 - 🌙 Dark mode
 - 🎯 Overloadable templates
-- 📚 [Live, working configuration examples](https://github.com/awestley/fastapi-blog/tree/main/tests/examples)
-- 🔍 SEO-friendly
-- 🗺️ Sitemap generation
-- 🐳 Docker support
+- 🔍 SEO-friendly with sitemap generation
+- 🏷️ Tags and categories
+- 📚 [Live examples](tests/examples/)
+
+### Admin Panel Features (NEW in v0.8.0)
+- ✨ Modern, beautiful admin UI (powered by starlette-admin)
+- 👥 User management with role-based access control
+- 📝 Visual post editor with Markdown support
+- 🌍 Internationalization (English/Russian)
+- 🔒 Secure authentication with bcrypt
+- 📦 Custom fields (Markdown, Tags, Slugs)
+- 🔍 Search, filtering, and pagination
+
+### Developer Experience
 - ⚡ Fast performance with FastAPI
 - 🔒 Modern security practices
-- 🧪 Comprehensive test coverage
+- 🧪 Comprehensive test coverage (50+ tests)
 - 🚀 Python 3.12+ and 3.13 support
+- 🐳 Docker support
 
 ## Basic Usage
 
-1. Import the `add_blog_to_fastapi` function
-2. Run the instantiated FastAPI app through the `add_blog_to_fastapi` function
+### Quick Setup with Admin Panel
 
-This all you need to do:
+```python
+from fastapi import FastAPI
+import fastapi_blog
+
+app = FastAPI()
+
+# Add blog functionality
+fastapi_blog.add_blog_to_fastapi(app, prefix="blog")
+
+# Add admin panel (NEW in v0.8.0)
+fastapi_blog.add_admin_to_app(
+    app,
+    admin_username="admin",
+    admin_password="change-me-in-production",
+    secret_key="your-secret-key",
+)
+
+@app.get("/")
+async def index() -> dict:
+    return {
+        "message": "Visit /blog for posts, /admin for management",
+        "blog": "http://localhost:8000/blog",
+        "admin": "http://localhost:8000/admin",
+    }
+```
+
+That's it! Now you have:
+- 📝 Blog at `/blog`
+- ⚙️ Admin panel at `/admin`
+- 🔒 Automatic database initialization
+
+### Basic Setup (Blog Only)
 
 ```python
 from fastapi_blog import add_blog_to_fastapi
 from fastapi import FastAPI
 
-
 app = FastAPI()
 app = add_blog_to_fastapi(app)
-
-
-@app.get("/")
-async def index() -> dict:
-    return {
-        "message": "Check out the blog at the URL",
-        "url": "http://localhost:8000/blog",
-    }
 ```
 
 3. Add the first blog entry
