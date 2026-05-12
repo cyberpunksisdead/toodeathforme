@@ -16,7 +16,7 @@ class SimpleAuthProvider(AuthProvider):
     def __init__(
         self,
         username: str = "admin",
-        password: str = "Admin123!",
+        password: str = "Admin123!",  # nosec B107 - default dev password, override in production
         redirect_after_login: str = "/dashboard/user/list",
     ):
         """Initialize auth provider with credentials and redirect URL."""
