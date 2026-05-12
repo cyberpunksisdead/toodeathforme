@@ -1,5 +1,63 @@
 # Changelog
 
+## 0.8.0 - 2026-05-12
+
+**Architecture Consolidation Update**
+
+### New Features
+
+* **Optional REST API**: Added `include_api` parameter to `add_blog_to_fastapi()` [#consolidation]
+  - REST API is now disabled by default for better security
+  - Can be enabled with `include_api=True`
+  - Added `api_prefix` and `api_require_auth` parameters for configuration
+
+* **Standalone API Router**: New `get_api_router()` function in `editor` module [#consolidation]
+  - Returns configured APIRouter for flexible integration
+  - Can be used independently from `add_blog_to_fastapi()`
+  - Supports custom prefixes, authentication, and directory settings
+
+### Deprecations
+
+* **UI parameter deprecated**: The `ui` parameter in `add_editor_to_app()` is deprecated [#consolidation]
+  - Will be removed in version 1.0.0
+  - Users should migrate to `add_admin_to_app()` for admin interface
+  - REST API remains available via `include_api` parameter or `get_api_router()`
+  - DeprecationWarning emitted when `ui=True` is used
+
+### Breaking Changes
+
+* None (fully backwards compatible with 0.7.x)
+
+### Migration Guide
+
+#### Old way (deprecated):
+```python
+from fastapi_blog import add_editor_to_app
+app = add_editor_to_app(app, ui=True)  # ⚠️ Deprecated
+```
+
+#### New way (recommended):
+```python
+# Option 1: Use modern admin panel
+from fastapi_blog.admin import add_admin_to_app
+app = add_admin_to_app(app)
+
+# Option 2: Enable REST API via add_blog_to_fastapi
+from fastapi_blog import add_blog_to_fastapi
+add_blog_to_fastapi(app, include_api=True)
+
+# Option 3: Use get_api_router directly
+from fastapi_blog.editor import get_api_router
+api_router = get_api_router(require_auth=True)
+app.include_router(api_router, prefix="/api/posts")
+```
+
+### Documentation
+
+* Added `ARCHITECTURE_CONSOLIDATION_PROGRESS.md` with migration guide
+* Updated docstrings with deprecation notices
+* Added example: `tests/examples/api_optional.py`
+
 ## 0.7.0 - 2025-09-18
 
 **Major Update: Modernized Dependencies and Development Environment**

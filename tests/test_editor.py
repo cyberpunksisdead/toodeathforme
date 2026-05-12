@@ -147,7 +147,7 @@ def test_update_post_not_found(client):
 def test_delete_post_success(client, app_dir):
     client.post("/api/posts/create/hello-world", json=VALID_PAYLOAD)
     response = client.delete("/api/posts/delete/hello-world")
-    assert response.status_code == 200
+    assert response.status_code == 204
     assert not (app_dir / "posts" / "hello-world.md").exists()
 
 

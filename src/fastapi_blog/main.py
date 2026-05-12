@@ -23,7 +23,54 @@ def add_blog_to_fastapi(
     sanitize_html: bool = True,
     posts_dirname: str = "posts",
     pages_dirname: str = "pages",
+    include_api: bool = False,
+    api_prefix: str = "/api/posts",
+    api_require_auth: bool = True,
 ) -> FastAPI:
+    """Add blog to FastAPI application.
+
+    Args:
+        app: FastAPI application instance
+        prefix: URL prefix for blog routes (default: 'blog', None for root)
+        jinja2_loader: Jinja2 template loader
+        jinja2_extensions: Set of Jinja2 extensions to enable
+        favorite_post_ids: Set of post slugs to feature on homepage
+        mount_statics: Whether to mount static files (deprecated)
+        strict_frontmatter: Use strict frontmatter validation
+        sanitize_html: Sanitize HTML in markdown content
+        posts_dirname: Directory containing blog posts
+        pages_dirname: Directory containing pages
+        include_api: Include REST API for post management (default: False)
+        api_prefix: URL prefix for REST API (default: '/api/posts')
+        api_require_auth: Require authentication for API (default: True)
+
+    Returns:
+        FastAPI application with blog routes added
+
+    Example:
+        ```python
+        from fastapi import (
+            FastAPI,
+        )
+        from fastapi_blog import (
+            add_blog_to_fastapi,
+        )
+
+        app = FastAPI()
+
+        # Basic blog
+        add_blog_to_fastapi(
+            app
+        )
+
+        # With REST API enabled
+        add_blog_to_fastapi(
+            app,
+            include_api=True,
+        )
+        ```
+
+    """
     # Prep the templates
     env = jinja2.Environment(
         loader=jinja2_loader,
@@ -45,5 +92,16 @@ def add_blog_to_fastapi(
     if prefix is not None:
         router_kwargs["prefix"] = f"/{prefix}"
     app.include_router(**router_kwargs)
+
+    # Optionally include REST API for post management
+    if include_api:
+        from .editor import get_api_router
+
+        api_router = get_api_router(
+            posts_dirname=posts_dirname,
+            strict=strict_frontmatter,
+            require_auth=api_require_auth,
+        )
+        app.include_router(api_router, prefix=api_prefix, tags=["api"])
 
     return app

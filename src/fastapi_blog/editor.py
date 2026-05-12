@@ -1,4 +1,5 @@
 import pathlib
+import warnings
 from typing import Any
 
 import jinja2
@@ -101,22 +102,50 @@ def _parse_file(path: pathlib.Path) -> dict[str, Any]:
     return {"frontmatter": frontmatter, "content": content}
 
 
-def add_editor_to_app(
-    app: FastAPI,
-    prefix: str = "/api/posts",
+def get_api_router(
     posts_dirname: str = "posts",
     strict: bool = True,
-    ui: bool = True,
-    ui_prefix: str = "/admin/editor",
     require_auth: bool = True,
-) -> FastAPI:
-    api_router = APIRouter(prefix=prefix, tags=["editor"])
+) -> APIRouter:
+    """Get REST API router for post management.
+
+    This function returns a configured APIRouter that can be included in any
+    FastAPI application. It provides REST API endpoints for CRUD operations
+    on markdown posts.
+
+    Args:
+        posts_dirname: Directory containing markdown posts (default: 'posts')
+        strict: Use strict frontmatter validation (default: True)
+        require_auth: Require authentication for all endpoints (default: True)
+
+    Returns:
+        APIRouter with REST API endpoints
+
+    Example:
+        ```python
+        from fastapi import (
+            FastAPI,
+        )
+        from fastapi_blog.editor import (
+            get_api_router,
+        )
+
+        app = FastAPI()
+        api_router = get_api_router(
+            require_auth=True
+        )
+        app.include_router(
+            api_router,
+            prefix="/api/posts",
+        )
+        ```
+
+    """
+    api_router = APIRouter(tags=["editor"])
     Payload = payload_model(strict)
     slug_path = Path(pattern=SLUG_PATTERN, max_length=100)
 
     # Setup authentication dependency
-    # When require_auth=True: raises 401 if not authenticated
-    # When require_auth=False: returns None if not authenticated
     auth_func = require_authentication if require_auth else optional_authentication
 
     @api_router.get("/{slug}/raw")
@@ -166,11 +195,11 @@ def add_editor_to_app(
         helpers.list_posts.cache_clear()
         return {"slug": slug, "status": "updated"}
 
-    @api_router.delete("/delete/{slug}")
+    @api_router.delete("/delete/{slug}", status_code=status.HTTP_204_NO_CONTENT)
     async def delete_post(
         slug: str = slug_path,
         user: dict | None = Depends(auth_func),
-    ) -> JSONResponse:
+    ) -> None:
         path = _post_path(slug, posts_dirname)
         if not path.is_file():
             raise HTTPException(
@@ -179,22 +208,13 @@ def add_editor_to_app(
             )
         path.unlink()
         helpers.list_posts.cache_clear()
-        return JSONResponse({"slug": slug, "status": "deleted"})
 
     @api_router.post("/save")
     async def save_post(
-        data: dict[str, Any],
+        request: Request,
         user: dict | None = Depends(auth_func),
-    ) -> dict[str, str]:
-        """Save (create or update) a post. Used by admin panel.
-
-        Expects:
-            {
-                "slug": "post-slug",
-                "frontmatter": {...},
-                "content": "..."
-            }
-        """
+    ) -> JSONResponse:
+        data = await request.json()
         slug = data.get("slug")
         if not slug:
             raise HTTPException(
@@ -205,7 +225,6 @@ def add_editor_to_app(
         frontmatter = data.get("frontmatter", {})
         content = data.get("content", "")
 
-        # Create payload using the model
         try:
             payload = Payload(  # type: ignore[call-arg]
                 frontmatter=frontmatter, content=content
@@ -214,22 +233,102 @@ def add_editor_to_app(
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail=f"Invalid payload: {str(e)}",
-            )
+            ) from e
 
         path = _post_path(slug, posts_dirname)
-        existed = path.exists()
-        path.parent.mkdir(parents=True, exist_ok=True)
+        is_new = not path.exists()
+
+        if is_new:
+            path.parent.mkdir(parents=True, exist_ok=True)
+
         path.write_text(_serialize(payload))
         helpers.list_posts.cache_clear()
 
-        return {"slug": slug, "status": "updated" if existed else "created"}
+        return JSONResponse(
+            content={"slug": slug, "status": "created" if is_new else "updated"},
+            status_code=status.HTTP_201_CREATED if is_new else status.HTTP_200_OK,
+        )
 
-    app.include_router(api_router)
+    return api_router
 
+
+def add_editor_to_app(
+    app: FastAPI,
+    prefix: str = "/api/posts",
+    posts_dirname: str = "posts",
+    strict: bool = True,
+    ui: bool = True,
+    ui_prefix: str = "/admin/editor",
+    require_auth: bool = True,
+) -> FastAPI:
+    """Add editor REST API and optional UI to FastAPI app.
+
+    .. deprecated:: 0.8.0
+        The UI parameter (ui=True) is deprecated. Use add_admin_to_app() for
+        admin interface instead. The REST API will remain available but should
+        be enabled explicitly via include_api parameter in future versions.
+
+    Args:
+        app: FastAPI application instance
+        prefix: URL prefix for REST API (default: '/api/posts')
+        posts_dirname: Directory containing markdown posts (default: 'posts')
+        strict: Use strict frontmatter validation (default: True)
+        ui: (DEPRECATED) Include UI routes (default: True)
+        ui_prefix: (DEPRECATED) URL prefix for UI (default: '/admin/editor')
+        require_auth: Require authentication for all endpoints (default: True)
+
+    Returns:
+        FastAPI application with editor routes added
+
+    Example:
+        ```python
+        from fastapi import (
+            FastAPI,
+        )
+        from fastapi_blog import (
+            add_editor_to_app,
+        )
+
+        app = FastAPI()
+        # REST API only (recommended)
+        add_editor_to_app(
+            app, ui=False
+        )
+
+        # Or use new admin panel instead
+        from fastapi_blog.admin import (
+            add_admin_to_app,
+        )
+
+        add_admin_to_app(
+            app
+        )
+        ```
+
+    """
+    # Emit deprecation warning if UI is enabled
+    if ui:
+        warnings.warn(
+            "The 'ui' parameter in add_editor_to_app() is deprecated and will be "
+            "removed in version 1.0.0. Please use add_admin_to_app() from "
+            "fastapi_blog.admin for a modern admin interface with better features. "
+            "The REST API (/api/posts) will remain available.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+
+    # Use get_api_router() to get REST API endpoints
+    api_router = get_api_router(
+        posts_dirname=posts_dirname,
+        strict=strict,
+        require_auth=require_auth,
+    )
+    app.include_router(api_router, prefix=prefix)
+
+    # Add deprecated UI routes if requested
     if ui:
         _add_ui_routes(
             app,
-            api_prefix=prefix,
             ui_prefix=ui_prefix,
             posts_dirname=posts_dirname,
             strict=strict,
@@ -241,25 +340,25 @@ def add_editor_to_app(
 
 def _add_ui_routes(
     app: FastAPI,
-    api_prefix: str,
     ui_prefix: str,
     posts_dirname: str,
     strict: bool,
     require_auth: bool,
 ) -> None:
+    """Add deprecated UI routes for editor."""
+    ui_router = APIRouter(prefix=ui_prefix, tags=["editor-ui"])
+    slug_path = Path(pattern=SLUG_PATTERN, max_length=100)
+    auth_func = require_authentication if require_auth else optional_authentication
+
+    # Prep templates
     env = jinja2.Environment(
         loader=jinja2.PackageLoader("fastapi_blog", "templates"),
         autoescape=jinja2.select_autoescape(["html", "xml"]),
     )
     templates = Jinja2Templates(env=env)
-    ui_router = APIRouter(prefix=ui_prefix, tags=["editor-ui"])
-    slug_path = Path(pattern=SLUG_PATTERN, max_length=100)
 
-    # Setup authentication for UI routes
-    auth_func = require_authentication if require_auth else optional_authentication
-
-    def _context(**extra: Any) -> dict[str, Any]:
-        return {"admin_prefix": ui_prefix, "api_prefix": api_prefix, **extra}
+    def _context(request: Request, **kwargs: Any) -> dict[str, Any]:
+        return {"request": request, **kwargs}
 
     @ui_router.get("/", response_class=HTMLResponse)
     async def editor_index(
@@ -275,7 +374,7 @@ def _add_ui_routes(
         return templates.TemplateResponse(
             request=request,
             name="admin/list.html",
-            context=_context(posts=list(posts) + list(drafts)),
+            context=_context(request, posts=list(posts) + list(drafts)),
         )
 
     @ui_router.get("/new", response_class=HTMLResponse)
@@ -287,6 +386,7 @@ def _add_ui_routes(
             request=request,
             name="admin/edit.html",
             context=_context(
+                request,
                 is_new=True,
                 slug="",
                 frontmatter={"title": "", "date": "", "tags": [], "published": False},
@@ -311,6 +411,7 @@ def _add_ui_routes(
             request=request,
             name="admin/edit.html",
             context=_context(
+                request,
                 is_new=False,
                 slug=slug,
                 frontmatter=data["frontmatter"],
