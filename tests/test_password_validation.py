@@ -13,8 +13,15 @@ from fastapi_blog.admin.views import (
 def test_password_min_length():
     """Test password minimum length validation."""
     # Too short
-    with pytest.raises(ValueError, match="at least 8 characters"):
+    with pytest.raises(ValueError, match="Password is too short"):
         validate_and_prepare_password("short")
+
+    # Error should include current and minimum length
+    with pytest.raises(ValueError, match="Minimum length: 8"):
+        validate_and_prepare_password("abc")
+
+    with pytest.raises(ValueError, match="Current length: 3"):
+        validate_and_prepare_password("abc")
 
     # Exactly min length - should work
     password = "a" * MIN_PASSWORD_LENGTH
@@ -24,13 +31,15 @@ def test_password_min_length():
 def test_password_max_length():
     """Test password maximum length validation."""
     # Too long
-    with pytest.raises(ValueError, match="must not exceed 128"):
+    with pytest.raises(ValueError, match="Password is too long"):
         validate_and_prepare_password("x" * (MAX_PASSWORD_LENGTH + 1))
 
-    # Exactly max length - should work
-    password = "a" * MAX_PASSWORD_LENGTH
-    result = validate_and_prepare_password(password)
-    assert len(result) <= BCRYPT_MAX_BYTES  # May be truncated to bcrypt limit
+    # Error should include current and maximum length
+    with pytest.raises(ValueError, match="Maximum length: 128"):
+        validate_and_prepare_password("x" * 200)
+
+    with pytest.raises(ValueError, match="Current length: 200"):
+        validate_and_prepare_password("x" * 200)
 
 
 def test_password_valid_range():
@@ -47,20 +56,24 @@ def test_password_valid_range():
     assert validate_and_prepare_password(password) == password
 
 
-def test_password_bcrypt_truncation():
-    """Test that passwords longer than 72 bytes are truncated."""
-    # Create password exactly at bcrypt limit
-    password_72 = "a" * BCRYPT_MAX_BYTES  # 72 bytes
+def test_password_bcrypt_byte_limit():
+    """Test that passwords exceeding 72 bytes are rejected."""
+    # Password exactly at bcrypt limit (72 ASCII chars = 72 bytes)
+    password_72 = "a" * BCRYPT_MAX_BYTES
     result = validate_and_prepare_password(password_72)
     assert result == password_72
 
-    # Create password longer than bcrypt limit (but within our MAX)
-    password_100 = "a" * 100
-    result = validate_and_prepare_password(password_100)
+    # Password over bcrypt limit should be rejected
+    password_100 = "a" * 100  # 100 bytes
+    with pytest.raises(ValueError, match="exceeds bcrypt limit"):
+        validate_and_prepare_password(password_100)
 
-    # Should be truncated to 72 bytes
-    assert len(result.encode("utf-8")) <= BCRYPT_MAX_BYTES
-    assert len(result) <= BCRYPT_MAX_BYTES
+    # Error should mention byte size
+    with pytest.raises(ValueError, match="72 bytes"):
+        validate_and_prepare_password("a" * 100)
+
+    with pytest.raises(ValueError, match="Current size: 100 bytes"):
+        validate_and_prepare_password("a" * 100)
 
 
 def test_password_unicode_handling():
@@ -70,17 +83,58 @@ def test_password_unicode_handling():
     result = validate_and_prepare_password(password)
     assert result == password
 
-    # Very long unicode password (each char can be multiple bytes)
-    password = "й" * 50  # Cyrillic character (2 bytes in UTF-8)
+    # Unicode password that fits in 72 bytes
+    password = "й" * 30  # 30 chars * 2 bytes = 60 bytes
     result = validate_and_prepare_password(password)
-    # Should be truncated to fit in 72 bytes
-    assert len(result.encode("utf-8")) <= BCRYPT_MAX_BYTES
+    assert result == password
+
+    # Unicode password exceeding 72 bytes should be rejected
+    password = "й" * 50  # 50 chars * 2 bytes = 100 bytes
+    with pytest.raises(ValueError, match="exceeds bcrypt limit"):
+        validate_and_prepare_password(password)
+
+    # Error should include helpful tip
+    with pytest.raises(ValueError, match="Unicode characters take multiple bytes"):
+        validate_and_prepare_password("й" * 50)
 
 
 def test_password_empty():
     """Test empty password validation."""
-    with pytest.raises(ValueError, match="at least 8 characters"):
+    with pytest.raises(ValueError, match="Password is too short"):
         validate_and_prepare_password("")
+
+
+def test_password_error_messages():
+    """Test that error messages are helpful and specific."""
+    # Too short - should explain the issue clearly
+    try:
+        validate_and_prepare_password("abc")
+        assert False, "Should have raised ValueError"
+    except ValueError as e:
+        error_msg = str(e)
+        assert "too short" in error_msg.lower()
+        assert "8" in error_msg
+        assert "3" in error_msg
+
+    # Too long - should explain the issue clearly
+    try:
+        validate_and_prepare_password("x" * 150)
+        assert False, "Should have raised ValueError"
+    except ValueError as e:
+        error_msg = str(e)
+        assert "too long" in error_msg.lower()
+        assert "128" in error_msg
+        assert "150" in error_msg
+
+    # Byte limit - should explain Unicode issue
+    try:
+        validate_and_prepare_password("ф" * 50)  # 100 bytes
+        assert False, "Should have raised ValueError"
+    except ValueError as e:
+        error_msg = str(e)
+        assert "bcrypt" in error_msg.lower()
+        assert "72 bytes" in error_msg
+        assert "unicode" in error_msg.lower()
 
 
 def test_password_constants():

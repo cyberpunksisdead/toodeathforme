@@ -26,31 +26,43 @@ def get_pwd_context():
 
 
 def validate_and_prepare_password(password: str) -> str:
-    """Validate password length and prepare for bcrypt hashing.
+    """Validate password length for bcrypt hashing.
 
     Args:
         password: Plain text password
 
     Returns:
-        Password truncated to bcrypt max bytes if needed
+        Validated password ready for hashing
 
     Raises:
-        ValueError: If password is too short or too long
+        ValueError: If password doesn't meet requirements with detailed message
 
     """
+    # Check minimum length
     if len(password) < MIN_PASSWORD_LENGTH:
         raise ValueError(
-            f"Password must be at least {MIN_PASSWORD_LENGTH} characters long"
+            f"Password is too short. "
+            f"Minimum length: {MIN_PASSWORD_LENGTH} characters. "
+            f"Current length: {len(password)} characters."
         )
-    if len(password) > MAX_PASSWORD_LENGTH:
-        raise ValueError(f"Password must not exceed {MAX_PASSWORD_LENGTH} characters")
 
-    # Truncate to bcrypt's 72 byte limit if needed
-    # This is safe - bcrypt only uses first 72 bytes anyway
+    # Check maximum character length
+    if len(password) > MAX_PASSWORD_LENGTH:
+        raise ValueError(
+            f"Password is too long. "
+            f"Maximum length: {MAX_PASSWORD_LENGTH} characters. "
+            f"Current length: {len(password)} characters."
+        )
+
+    # Check bcrypt byte limit (important for Unicode)
     password_bytes = password.encode("utf-8")
     if len(password_bytes) > BCRYPT_MAX_BYTES:
-        password_bytes = password_bytes[:BCRYPT_MAX_BYTES]
-        password = password_bytes.decode("utf-8", errors="ignore")
+        raise ValueError(
+            f"Password exceeds bcrypt limit of {BCRYPT_MAX_BYTES} bytes when encoded. "
+            f"Current size: {len(password_bytes)} bytes. "
+            f"Tip: Unicode characters take multiple bytes. "
+            f"Try using fewer special characters or a shorter password."
+        )
 
     return password
 
