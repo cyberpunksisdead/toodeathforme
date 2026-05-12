@@ -19,16 +19,16 @@ from .models import (
 
 async def require_authentication(request: Request) -> dict:
     """Require authentication via session cookie.
-    
+
     This function is part of fastapi-blog and only checks session-based
     authentication (starlette-admin SessionMiddleware).
-    
+
     For JWT authentication, the parent application should override this
     dependency or add custom middleware.
-    
+
     Returns:
         dict with user info if authenticated
-    
+
     Raises:
         HTTPException 401 if not authenticated
     """
@@ -39,7 +39,7 @@ async def require_authentication(request: Request) -> dict:
             'username': user,
             'is_admin': request.session.get('is_admin', False)
         }
-    
+
     # No valid session found
     raise HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
@@ -50,10 +50,10 @@ async def require_authentication(request: Request) -> dict:
 
 async def optional_authentication(request: Request) -> dict | None:
     """Optional authentication - returns None if not authenticated.
-    
+
     This is used when require_auth=False (e.g., in tests).
     Does NOT raise 401, just returns None.
-    
+
     Returns:
         dict with user info if authenticated, None otherwise
     """
@@ -70,7 +70,10 @@ def _post_path(slug: str, posts_dirname: str) -> pathlib.Path:
     if not is_valid_slug(slug):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Invalid slug. Allowed: lowercase letters, digits, hyphens (max 100).",
+            detail=(
+                "Invalid slug. Allowed: lowercase letters, digits, "
+                "hyphens (max 100)."
+            ),
         )
     return pathlib.Path(posts_dirname) / f"{slug}.md"
 
@@ -131,7 +134,7 @@ def add_editor_to_app(
     # When require_auth=True: Depends(require_authentication) - raises 401 if not authenticated
     # When require_auth=False: Depends(optional_authentication) - returns None if not authenticated
     auth_func = require_authentication if require_auth else optional_authentication
-    
+
     @api_router.post("/create/{slug}", status_code=status.HTTP_201_CREATED)
     async def create_post(
         payload: Payload,  # type: ignore[valid-type]
@@ -186,7 +189,7 @@ def add_editor_to_app(
         user: dict | None = Depends(auth_func),
     ) -> dict[str, str]:
         """Save (create or update) a post. Used by admin panel.
-        
+
         Expects:
             {
                 "slug": "post-slug",
@@ -200,25 +203,27 @@ def add_editor_to_app(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Slug is required",
             )
-        
+
         frontmatter = data.get('frontmatter', {})
         content = data.get('content', '')
-        
+
         # Create payload using the model
         try:
-            payload = Payload(frontmatter=frontmatter, content=content)  # type: ignore[call-arg]
+            payload = Payload(  # type: ignore[call-arg]
+                frontmatter=frontmatter, content=content
+            )
         except Exception as e:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail=f"Invalid payload: {str(e)}",
             )
-        
+
         path = _post_path(slug, posts_dirname)
         existed = path.exists()
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(_serialize(payload))
         helpers.list_posts.cache_clear()
-        
+
         return {"slug": slug, "status": "updated" if existed else "created"}
 
     app.include_router(api_router)
@@ -251,7 +256,7 @@ def _add_ui_routes(
     templates = Jinja2Templates(env=env)
     ui_router = APIRouter(prefix=ui_prefix, tags=["editor-ui"])
     slug_path = Path(pattern=SLUG_PATTERN, max_length=100)
-    
+
     # Setup authentication for UI routes
     auth_func = require_authentication if require_auth else optional_authentication
 
