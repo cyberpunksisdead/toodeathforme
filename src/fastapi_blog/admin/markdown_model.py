@@ -108,7 +108,12 @@ class MarkdownPost:
                 print(f"Error loading {file_path}: {e}")
 
         # Sort by date, newest first
-        posts.sort(key=lambda p: p.date, reverse=True)
+        # Handle mixed timezone-aware and naive datetimes
+        try:
+            posts.sort(key=lambda p: p.date, reverse=True)
+        except TypeError:
+            # Fallback: sort by ISO format string representation
+            posts.sort(key=lambda p: p.date.isoformat() if p.date else "", reverse=True)
         return posts
 
     @classmethod
