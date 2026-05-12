@@ -46,7 +46,7 @@ uvicorn app:app --reload
 ### 4. Откройте в браузере
 
 - **Блог**: http://localhost:8000/blog
-- **Админ-панель**: http://localhost:8000/dashboard
+- **Админ-панель**: http://localhost:8000/admin
 - **API документация**: http://localhost:8000/docs
 
 ### 5. Войдите в админ-панель
@@ -70,7 +70,7 @@ uvicorn app:app --reload
    ✓ Admin panel mounted at /dashboard
    ✓ Markdown CRUD API available at /api/posts (authenticated)
    ✓ Admin database initialized
-   ✓ Admin panel: http://localhost:8000/dashboard
+   ✓ Admin panel: http://localhost:8000/admin
    ✓ Login: username='admin' password='Admin123!'
    ```
 
@@ -78,7 +78,7 @@ uvicorn app:app --reload
 
 ### Через админ-панель
 
-1. Откройте http://localhost:8000/dashboard
+1. Откройте http://localhost:8000/admin
 2. Войдите (admin / Admin123!)
 3. Перейдите в "Markdown Posts"
 4. Нажмите "Create"

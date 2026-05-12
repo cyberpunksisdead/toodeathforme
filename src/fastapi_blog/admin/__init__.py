@@ -38,7 +38,7 @@ __all__ = [
 def add_admin_to_app(
     app: FastAPI,
     *,
-    base_url: str = "/dashboard",
+    base_url: str = "/admin",
     title: str = "Admin Panel",
     database_url: str | None = None,
     admin_username: str = "admin",
@@ -54,7 +54,7 @@ def add_admin_to_app(
 
     Args:
       app: FastAPI application instance
-      base_url: Base URL for admin panel (default: '/dashboard')
+      base_url: Base URL for admin panel (default: '/admin')
       title: Admin panel title
       database_url: Database URL (default: from DATABASE_URL env or SQLite)
       admin_username: Admin username for login (default: 'admin')

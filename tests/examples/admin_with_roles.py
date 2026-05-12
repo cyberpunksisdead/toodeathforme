@@ -167,7 +167,7 @@ engine, _ = create_engine_and_session()
 admin = Admin(
     engine,
     title="Blog Admin (RBAC)",
-    base_url="/dashboard",
+    base_url="/admin",
     auth_provider=RoleBasedAuthProvider(),
 )
 
@@ -184,7 +184,7 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 async def root():
     return {
         "message": "Blog with Role-Based Access Control",
-        "admin_panel": "http://localhost:8000/dashboard",
+        "admin_panel": "http://localhost:8000/admin",
         "test_users": [
             {
                 "username": "admin",

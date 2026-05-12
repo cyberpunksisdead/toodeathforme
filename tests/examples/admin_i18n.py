@@ -23,7 +23,7 @@ fastapi_blog.add_blog_to_fastapi(
 admin = fastapi_blog.add_admin_to_app(
     app,
     title="Админ-панель блога",  # Russian title
-    base_url="/dashboard",
+    base_url="/admin",
     admin_username="admin",
     admin_password="Admin123!",
     secret_key="change-me-in-production",
@@ -40,8 +40,8 @@ async def index() -> dict:
     return {
         "message": "Multilingual admin panel example",
         "blog": "http://localhost:8000/blog",
-        "admin_en": "http://localhost:8000/dashboard (switch to English in UI)",
-        "admin_ru": "http://localhost:8000/dashboard (по умолчанию русский)",
+        "admin_en": "http://localhost:8000/admin (switch to English in UI)",
+        "admin_ru": "http://localhost:8000/admin (по умолчанию русский)",
         "credentials": {"username": "admin", "password": "Admin123!"},
         "note": "Language can be switched in the admin interface",
     }

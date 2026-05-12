@@ -6,7 +6,7 @@ Run this example:
 
 Then open:
     Blog:  http://localhost:8000/blog
-    Admin: http://localhost:8000/dashboard
+    Admin: http://localhost:8000/admin
 
 Login credentials:
     Username: admin
@@ -41,7 +41,7 @@ fastapi_blog.add_blog_to_fastapi(
 admin = fastapi_blog.add_admin_to_app(
     app,
     title="Blog Admin",
-    base_url="/dashboard",
+    base_url="/admin",
     admin_username="admin",
     admin_password="Admin123!",
     secret_key="change-me-in-production",
@@ -58,7 +58,7 @@ async def root():
         "message": "Welcome to FastAPI Blog!",
         "links": {
             "blog": "http://localhost:8000/blog",
-            "admin": "http://localhost:8000/dashboard",
+            "admin": "http://localhost:8000/admin",
             "api_docs": "http://localhost:8000/docs",
         },
         "admin_login": {

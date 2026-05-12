@@ -29,7 +29,7 @@ fastapi_blog.add_blog_to_fastapi(
 admin = fastapi_blog.add_admin_to_app(
     app,
     title="Blog Admin Panel",
-    base_url="/dashboard",
+    base_url="/admin",
     admin_username="admin",
     admin_password="Admin123!",
     secret_key="change-me-in-production",
@@ -55,7 +55,7 @@ async def index() -> dict:
         ],
         "endpoints": {
             "blog": "http://localhost:8000/blog",
-            "admin": "http://localhost:8000/dashboard",
+            "admin": "http://localhost:8000/admin",
             "api_docs": "http://localhost:8000/docs",
         },
         "credentials": {"username": "admin", "password": "Admin123!"},
