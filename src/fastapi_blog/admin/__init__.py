@@ -11,9 +11,11 @@ import os
 from fastapi import FastAPI
 from starlette.middleware.sessions import SessionMiddleware
 from starlette_admin.contrib.sqla import Admin
+from starlette_admin.i18n import I18nConfig
 
 from .auth_provider import SimpleAuthProvider
 from .database import create_engine_and_session, init_db
+from .fields import MarkdownField, SlugField, TagsField
 from .models import Post, User
 from .views import PostModelView, UserModelView
 
@@ -27,6 +29,9 @@ __all__ = [
     "SimpleAuthProvider",
     "UserModelView",
     "PostModelView",
+    "MarkdownField",
+    "TagsField",
+    "SlugField",
 ]
 
 
@@ -41,6 +46,9 @@ def add_admin_to_app(
     secret_key: str | None = None,
     add_session_middleware: bool = True,
     init_database: bool = True,
+    i18n_enabled: bool = True,
+    i18n_default_locale: str = "en",
+    i18n_locales: list[str] | None = None,
 ) -> Admin:
     """Add starlette-admin panel to FastAPI application.
 
@@ -54,6 +62,9 @@ def add_admin_to_app(
       secret_key: Secret key for sessions (default: from SECRET_KEY env)
       add_session_middleware: Whether to add SessionMiddleware (default: True)
       init_database: Whether to initialize database on startup (default: True)
+      i18n_enabled: Enable internationalization (default: True)
+      i18n_default_locale: Default locale (default: 'en')
+      i18n_locales: List of available locales (default: ['en', 'ru'])
 
     Returns:
       Admin instance
@@ -68,10 +79,26 @@ def add_admin_to_app(
       )
 
       app = FastAPI()
+
+      # English only
       admin = add_admin_to_app(
           app,
           title="My Blog Admin",
           admin_password="SuperSecret123!",
+          i18n_locales=[
+              "en"
+          ],
+      )
+
+      # Russian by default with EN/RU switcher
+      admin = add_admin_to_app(
+          app,
+          title="Админ-панель блога",
+          i18n_default_locale="ru",
+          i18n_locales=[
+              "en",
+              "ru",
+          ],
       )
       ```
 
@@ -110,6 +137,16 @@ def add_admin_to_app(
     pkg_path = Path(fastapi_blog.__file__).parent
     templates_dir = str(pkg_path / "admin" / "templates")
 
+    # Configure i18n if enabled
+    i18n_config = None
+    if i18n_enabled:
+        if i18n_locales is None:
+            i18n_locales = ["en", "ru"]
+        i18n_config = I18nConfig(
+            default_locale=i18n_default_locale,
+            language_switcher=i18n_locales if len(i18n_locales) > 1 else None,
+        )
+
     # Create admin instance
     admin = Admin(
         engine,
@@ -117,6 +154,7 @@ def add_admin_to_app(
         base_url=base_url,
         auth_provider=auth_provider,
         templates_dir=templates_dir,
+        i18n_config=i18n_config,
         debug=os.getenv("DEBUG", "false").lower() == "true",
     )
 

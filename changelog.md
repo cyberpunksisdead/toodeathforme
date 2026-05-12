@@ -52,11 +52,26 @@ api_router = get_api_router(require_auth=True)
 app.include_router(api_router, prefix="/api/posts")
 ```
 
+* **Internationalization (i18n)**: Full i18n support in admin panel [#consolidation]
+  - Added `i18n_enabled`, `i18n_default_locale`, and `i18n_locales` parameters
+  - Support for EN/RU out of the box (uses starlette-admin translations)
+  - Language switcher in admin interface when multiple locales configured
+  - Added dependency: `starlette-admin[i18n]` (includes babel)
+
+* **Custom Fields**: New field types for better admin UX [#consolidation]
+  - `MarkdownField`: Enhanced textarea optimized for markdown (20+ rows, preview)
+  - `TagsField`: Comma-separated tags with smart conversion and badge display
+  - `SlugField`: URL-safe slug validation with automatic lowercase
+  - All fields properly typed and compatible with starlette-admin
+
 ### Documentation
 
 * Added `ARCHITECTURE_CONSOLIDATION_PROGRESS.md` with migration guide
-* Updated docstrings with deprecation notices
-* Added example: `tests/examples/api_optional.py`
+* Updated docstrings with deprecation notices and examples
+* Added examples:
+  - `tests/examples/api_optional.py` - Optional REST API usage
+  - `tests/examples/admin_i18n.py` - i18n configuration
+  - `tests/examples/admin_full_featured.py` - All features combined
 
 ## 0.7.0 - 2025-09-18
 

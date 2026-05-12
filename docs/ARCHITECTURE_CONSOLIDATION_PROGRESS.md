@@ -110,31 +110,75 @@ app.include_router(api_router, prefix="/api/v1/posts", tags=["content"])
 - 🛠️ Гибкость: можно использовать `get_api_router()` с кастомными настройками
 - 📦 Меньший footprint для тех, кто не использует API
 
+### Фаза 3: Интернационализация (i18n) ✅
+
+**Статус**: Завершена
+
+**Реализовано**:
+- ✅ Добавлен параметр `i18n_enabled` в `add_admin_to_app()`
+- ✅ Параметры `i18n_default_locale` и `i18n_locales` для конфигурации
+- ✅ Интеграция с I18nConfig из starlette-admin
+- ✅ Поддержка EN/RU из коробки (используются встроенные переводы starlette-admin)
+- ✅ Добавлена зависимость `babel` через `starlette-admin[i18n]`
+
+**API**:
+```python
+from fastapi_blog.admin import add_admin_to_app
+
+# Русский по умолчанию с переключателем EN/RU
+admin = add_admin_to_app(
+    app,
+    title="Админ-панель блога",
+    i18n_enabled=True,
+    i18n_default_locale="ru",
+    i18n_locales=["en", "ru"],
+)
+
+# Только английский (без переключателя)
+admin = add_admin_to_app(
+    app,
+    i18n_locales=["en"],
+)
+
+# Отключить i18n
+admin = add_admin_to_app(
+    app,
+    i18n_enabled=False,
+)
+```
+
+### Фаза 4: Custom Fields ✅
+
+**Статус**: Завершена
+
+**Реализовано**:
+- ✅ Создан `MarkdownField` - расширенное текстовое поле для markdown
+- ✅ Создан `TagsField` - поле для управления тегами (comma-separated)
+- ✅ Создан `SlugField` - поле для URL-safe slugs с валидацией
+- ✅ Все поля экспортированы в `fastapi_blog.admin`
+- ✅ Корректные type hints и совместимость с starlette-admin
+
+**Использование**:
+```python
+from fastapi_blog.admin import MarkdownField, TagsField, SlugField
+from starlette_admin.contrib.sqla import ModelView
+
+class CustomPostView(ModelView):
+    fields = [
+        SlugField("slug", required=True),
+        "title",
+        TagsField("tags", placeholder="python, fastapi, web"),
+        MarkdownField("content", rows=25),
+        "published",
+    ]
+```
+
+**Возможности**:
+- `MarkdownField`: большая textarea (20+ строк), preview в list view
+- `TagsField`: конвертация между string/list, отображение как badges
+- `SlugField`: валидация формата, автоматический lowercase
+
 ## 🚧 Следующие этапы
-
-### Фаза 3: Интернационализация (i18n)
-
-**Статус**: Планируется
-
-**Задачи**:
-- [ ] Добавить поддержку RU/EN в starlette-admin
-- [ ] Создать файлы переводов (locales/ru, locales/en)
-- [ ] Интегрировать I18nConfig в `add_admin_to_app()`
-- [ ] Перевести интерфейс админ-панели
-
-**Приоритет**: Средний
-
-### Фаза 4: Custom Fields
-
-**Статус**: Планируется
-
-**Задачи**:
-- [ ] Создать `MarkdownField` с live preview
-- [ ] Создать `TagsField` для мультивыбора тегов
-- [ ] Интегрировать в `MarkdownPostView`
-- [ ] Добавить поддержку markdown редакторов (EasyMDE, SimpleMDE)
-
-**Приоритет**: Высокий
 
 ### Фаза 5: Полное удаление UI из editor.py
 
@@ -168,9 +212,11 @@ app.include_router(api_router, prefix="/api/v1/posts", tags=["content"])
 ## 🎯 Итоги
 
 **Выполнено**:
-- 2 из 5 фаз завершены (40%)
-- Основная архитектурная консолидация сделана
-- Обратная совместимость сохранена
-- Тесты проходят
+- ✅ 4 из 5 фаз завершены (80%)
+- ✅ Основная архитектурная консолидация сделана
+- ✅ Интернационализация реализована
+- ✅ Custom fields созданы
+- ✅ Обратная совместимость сохранена
+- ✅ Все тесты проходят (50 passed, 1 skipped)
 
-**Следующий шаг**: Обновить примеры и документацию для демонстрации нового API
+**Следующий шаг**: Фаза 5 будет реализована в v1.0.0 (breaking changes)
