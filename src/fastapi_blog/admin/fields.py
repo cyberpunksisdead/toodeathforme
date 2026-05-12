@@ -54,12 +54,20 @@ class MarkdownField(TextAreaField):
             Serialized value
 
         """
-        if action == "list" and value:
+        if not value:
+            return value
+
+        if action == "list":
             # Show truncated preview in list view
             preview = str(value)[:100]
             if len(str(value)) > 100:
                 preview += "..."
             return preview
+        elif action == "detail":
+            # Render markdown to HTML in detail view
+            import markdown
+            from markupsafe import Markup
+            return Markup(markdown.markdown(Markup.escape(value)))
         return value
 
 

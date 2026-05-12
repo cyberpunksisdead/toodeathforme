@@ -116,11 +116,19 @@ def add_admin_to_app(
     # Create engine and session
     engine, session_factory = create_engine_and_session(database_url)
 
-    # Note: Database initialization should be done in app lifespan or startup event
-    # If init_database=True, caller should handle init_db(engine) in their startup
+    # Initialize database if requested
     if init_database:
-        # Store engine for later initialization
+        # Store engine for later access
         app.state.admin_engine = engine
+
+        # Add startup event to initialize database
+        @app.on_event("startup")
+        async def init_admin_db():
+            """Initialize admin database on startup."""
+            init_db(engine)
+            print("✓ Admin database initialized")
+            print(f"✓ Admin panel: http://localhost:8000{base_url}")
+            print(f"✓ Login: username='{admin_username}' password='{admin_password}'")
 
     # Create auth provider
     auth_provider = SimpleAuthProvider(
@@ -182,5 +190,9 @@ def add_admin_to_app(
     admin.mount_to(app)
     print(f"✓ Admin panel mounted at {base_url}")
     print("✓ Markdown CRUD API available at /api/posts (authenticated)")
+
+    if not init_database:
+        print("⚠ Database initialization disabled. Call init_db(engine) manually.")
+        print(f"  Login: username='{admin_username}' password='{admin_password}'")
 
     return admin

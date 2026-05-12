@@ -1,0 +1,218 @@
+"""Example: Admin panel with role-based access control.
+
+Demonstrates advanced authentication with:
+- Multiple users with different roles
+- Role-based permissions
+- User avatars
+- Custom photo URLs
+
+Inspired by starlette-admin-demo.
+
+Run:
+    cd tests/examples
+    uvicorn admin_with_roles:app --reload
+
+Test users:
+    admin / password     - Full access (admin role)
+    editor / password    - Can edit but not delete (editor role)
+    viewer / password    - Read-only access (viewer role)
+"""
+
+from pathlib import Path
+
+from fastapi import FastAPI
+from fastapi.staticfiles import StaticFiles
+from starlette.middleware.sessions import SessionMiddleware
+from starlette.requests import Request
+from starlette.responses import Response
+from starlette_admin.auth import AdminUser, AuthProvider
+from starlette_admin.contrib.sqla import Admin, ModelView
+from starlette_admin.exceptions import FormValidationError, LoginFailed
+
+import fastapi_blog
+from fastapi_blog.admin.database import create_engine_and_session, init_db
+from fastapi_blog.admin.models import Post, User
+
+
+# Create directories
+Path("posts").mkdir(exist_ok=True)
+Path("pages").mkdir(exist_ok=True)
+Path("static").mkdir(exist_ok=True)
+
+# Mock users database
+USERS = {
+    "admin": {
+        "name": "Admin User",
+        "password": "password",
+        "roles": ["admin"],
+        "avatar": "https://ui-avatars.com/api/?name=Admin+User&background=0D8ABC&color=fff",
+    },
+    "editor": {
+        "name": "Editor User",
+        "password": "password",
+        "roles": ["editor"],
+        "avatar": "https://ui-avatars.com/api/?name=Editor+User&background=FF6B6B&color=fff",
+    },
+    "viewer": {
+        "name": "Viewer User",
+        "password": "password",
+        "roles": ["viewer"],
+        "avatar": "https://ui-avatars.com/api/?name=Viewer+User&background=4ECDC4&color=fff",
+    },
+}
+
+
+class RoleBasedAuthProvider(AuthProvider):
+    """Authentication provider with role-based access control."""
+
+    async def login(
+        self,
+        username: str,
+        password: str,
+        remember_me: bool,
+        request: Request,
+        response: Response,
+    ) -> Response:
+        """Authenticate user and save to session."""
+        # Form validation
+        if len(username) < 3:
+            raise FormValidationError(
+                {"username": "Username must be at least 3 characters"}
+            )
+
+        # Check credentials
+        user = USERS.get(username)
+        if user and user["password"] == password:
+            # Save username in session
+            request.session.update({"username": username})
+            return response
+
+        raise LoginFailed("Invalid username or password")
+
+    async def is_authenticated(self, request: Request) -> bool:
+        """Check if user is authenticated."""
+        username = request.session.get("username")
+        if username in USERS:
+            # Save user info in request state for access in views
+            request.state.user = USERS[username]
+            return True
+        return False
+
+    def get_admin_user(self, request: Request) -> AdminUser | None:
+        """Get admin user with photo."""
+        user = request.state.user
+        return AdminUser(
+            username=user["name"],
+            photo_url=user["avatar"],
+        )
+
+    async def logout(self, request: Request, response: Response) -> Response:
+        """Clear session on logout."""
+        request.session.clear()
+        return response
+
+
+class UserView(ModelView):
+    """User management - admin only."""
+
+    def is_accessible(self, request: Request) -> bool:
+        """Only admin can access user management."""
+        return "admin" in request.state.user.get("roles", [])
+
+    def can_delete(self, request: Request) -> bool:
+        """Only admin can delete users."""
+        return "admin" in request.state.user.get("roles", [])
+
+
+class PostView(ModelView):
+    """Post management - admin and editor."""
+
+    def is_accessible(self, request: Request) -> bool:
+        """Admin and editor can access posts."""
+        roles = request.state.user.get("roles", [])
+        return "admin" in roles or "editor" in roles
+
+    def can_delete(self, request: Request) -> bool:
+        """Only admin can delete posts."""
+        return "admin" in request.state.user.get("roles", [])
+
+    def can_edit(self, request: Request) -> bool:
+        """Admin and editor can edit posts."""
+        roles = request.state.user.get("roles", [])
+        return "admin" in roles or "editor" in roles
+
+    def can_create(self, request: Request) -> bool:
+        """Admin and editor can create posts."""
+        roles = request.state.user.get("roles", [])
+        return "admin" in roles or "editor" in roles
+
+
+app = FastAPI(title="Blog with RBAC")
+
+# Add blog
+fastapi_blog.add_blog_to_fastapi(
+    app,
+    prefix="blog",
+    strict_frontmatter=False,
+    sanitize_html=False,
+)
+
+# Add session middleware
+app.add_middleware(SessionMiddleware, secret_key="change-me-in-production")
+
+# Create database engine
+engine, _ = create_engine_and_session()
+
+# Create admin with RBAC
+admin = Admin(
+    engine,
+    title="Blog Admin (RBAC)",
+    base_url="/dashboard",
+    auth_provider=RoleBasedAuthProvider(),
+)
+
+# Add views with role-based permissions
+admin.add_view(UserView(User, icon="fa fa-users"))
+admin.add_view(PostView(Post, icon="fa fa-blog", label="Blog Posts"))
+
+admin.mount_to(app)
+
+app.mount("/static", StaticFiles(directory="static"), name="static")
+
+
+@app.get("/")
+async def root():
+    return {
+        "message": "Blog with Role-Based Access Control",
+        "admin_panel": "http://localhost:8000/dashboard",
+        "test_users": [
+            {
+                "username": "admin",
+                "password": "password",
+                "roles": ["admin"],
+                "permissions": "Full access - can create, edit, delete everything",
+            },
+            {
+                "username": "editor",
+                "password": "password",
+                "roles": ["editor"],
+                "permissions": "Can create and edit posts, but cannot delete",
+            },
+            {
+                "username": "viewer",
+                "password": "password",
+                "roles": ["viewer"],
+                "permissions": "Read-only access, cannot access admin panel",
+            },
+        ],
+        "note": "Try logging in with different users to see role-based permissions",
+    }
+
+
+@app.on_event("startup")
+async def startup():
+    """Initialize database on startup."""
+    init_db(engine)
+    print("✓ Database initialized")
+    print("✓ Admin panel: http://localhost:8000/dashboard")
+    print("✓ Try logging in with: admin/password, editor/password, or viewer/password")
