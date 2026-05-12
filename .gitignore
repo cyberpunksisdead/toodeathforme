@@ -175,4 +175,4 @@ changelog.json
 /tmp
 !/tmp/.keep
 
-*.bak
+*.baktests/examples/data/
