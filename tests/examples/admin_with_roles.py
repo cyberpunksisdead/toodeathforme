@@ -30,7 +30,7 @@ from starlette_admin.contrib.sqla import Admin, ModelView
 from starlette_admin.exceptions import FormValidationError, LoginFailed
 
 import fastapi_blog
-from fastapi_blog.admin.database import create_engine_and_session, init_db
+from fastapi_blog.admin.database import create_engine_and_session
 from fastapi_blog.admin.models import Post, User
 
 
@@ -209,10 +209,4 @@ async def root():
     }
 
 
-@app.on_event("startup")
-async def startup():
-    """Initialize database on startup."""
-    init_db(engine)
-    print("✓ Database initialized")
-    print("✓ Admin panel: http://localhost:8000/dashboard")
-    print("✓ Try logging in with: admin/password, editor/password, or viewer/password")
+# Database initialized automatically

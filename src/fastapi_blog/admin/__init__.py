@@ -191,8 +191,12 @@ def add_admin_to_app(
     print(f"✓ Admin panel mounted at {base_url}")
     print("✓ Markdown CRUD API available at /api/posts (authenticated)")
 
-    if not init_database:
+    if init_database:
+        print("✓ Database initialized")
+    else:
         print("⚠ Database initialization disabled. Call init_db(engine) manually.")
-        print(f"  Login: username='{admin_username}' password='{admin_password}'")
+
+    print(f"✓ Login: username='{admin_username}' password='{admin_password}'")
+    print(f"✓ Access at: http://localhost:8000{base_url}")
 
     return admin
