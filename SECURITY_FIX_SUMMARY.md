@@ -38,14 +38,14 @@ async def optional_authentication(request: Request) -> Optional[dict]:
 auth_func = require_authentication if require_auth else optional_authentication
 
 async def create_post(
-    user: Optional[dict] = Depends(auth_func),  # ✅ Типобезопасно!
+    user: dict | None = Depends(auth_func),  # ✅ Типобезопасно!
 ):
 ```
 
 **Как это работает:**
 - `require_auth=True` → `auth_func = require_authentication` → **всегда** требует аутентификацию, возвращает 401
 - `require_auth=False` → `auth_func = optional_authentication` → возвращает `None` (для тестов)
-- Тип `Optional[dict]` корректно описывает обе ситуации
+- Тип `dict | None` (современный синтаксис Python 3.10+) корректно описывает обе ситуации
 
 ## 🛡️ Улучшения безопасности
 

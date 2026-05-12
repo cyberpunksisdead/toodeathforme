@@ -72,7 +72,7 @@ def add_editor_to_app(
 - `require_auth=True` (default): Use session authentication
 - `require_auth=False`: Disable authentication (for tests or public access)
 
-### 3. Fixed type safety with Optional[dict]
+### 3. Fixed type safety with dict | None (Python 3.12+ syntax)
 
 ```python
 # Setup authentication dependency
@@ -82,14 +82,14 @@ auth_func = require_authentication if require_auth else optional_authentication
 async def create_post(
     payload: Payload,
     slug: str = slug_path,
-    user: Optional[dict] = Depends(auth_func),  # ✅ Type-safe!
+    user: dict | None = Depends(auth_func),  # ✅ Type-safe!
 ) -> dict[str, str]:
 ```
 
 **Why this works:**
 - When `require_auth=True`: `auth_func = require_authentication` → always raises 401 if not authenticated
 - When `require_auth=False`: `auth_func = optional_authentication` → returns None (for tests)
-- Type is `Optional[dict]` which correctly represents both cases
+- Type is `dict | None` (modern Python 3.10+ syntax) which correctly represents both cases
 
 ### 4. Added authentication to ALL endpoints
 

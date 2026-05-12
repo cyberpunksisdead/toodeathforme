@@ -1,5 +1,5 @@
 import pathlib
-from typing import Any, Optional
+from typing import Any
 
 import jinja2
 import yaml
@@ -48,7 +48,7 @@ async def require_authentication(request: Request) -> dict:
     )
 
 
-async def optional_authentication(request: Request) -> Optional[dict]:
+async def optional_authentication(request: Request) -> dict | None:
     """Optional authentication - returns None if not authenticated.
     
     This is used when require_auth=False (e.g., in tests).
@@ -116,7 +116,7 @@ def add_editor_to_app(
     @api_router.get("/{slug}/raw")
     async def get_raw(
         slug: str = slug_path,
-        user: Optional[dict] = Depends(auth_func),
+        user: dict | None = Depends(auth_func),
     ) -> dict[str, Any]:
         path = _post_path(slug, posts_dirname)
         if not path.is_file():
@@ -136,7 +136,7 @@ def add_editor_to_app(
     async def create_post(
         payload: Payload,  # type: ignore[valid-type]
         slug: str = slug_path,
-        user: Optional[dict] = Depends(auth_func),
+        user: dict | None = Depends(auth_func),
     ) -> dict[str, str]:
         path = _post_path(slug, posts_dirname)
         if path.exists():
@@ -153,7 +153,7 @@ def add_editor_to_app(
     async def update_post(
         payload: Payload,  # type: ignore[valid-type]
         slug: str = slug_path,
-        user: Optional[dict] = Depends(auth_func),
+        user: dict | None = Depends(auth_func),
     ) -> dict[str, str]:
         path = _post_path(slug, posts_dirname)
         if not path.is_file():
@@ -168,7 +168,7 @@ def add_editor_to_app(
     @api_router.delete("/delete/{slug}")
     async def delete_post(
         slug: str = slug_path,
-        user: Optional[dict] = Depends(auth_func),
+        user: dict | None = Depends(auth_func),
     ) -> JSONResponse:
         path = _post_path(slug, posts_dirname)
         if not path.is_file():
@@ -183,7 +183,7 @@ def add_editor_to_app(
     @api_router.post("/save")
     async def save_post(
         data: dict[str, Any],
-        user: Optional[dict] = Depends(auth_func),
+        user: dict | None = Depends(auth_func),
     ) -> dict[str, str]:
         """Save (create or update) a post. Used by admin panel.
         
@@ -261,7 +261,7 @@ def _add_ui_routes(
     @ui_router.get("/", response_class=HTMLResponse)
     async def editor_index(
         request: Request,
-        user: Optional[dict] = Depends(auth_func),
+        user: dict | None = Depends(auth_func),
     ) -> Any:
         posts = helpers.list_posts(
             posts_dirname=posts_dirname, strict=strict, published=True
@@ -278,7 +278,7 @@ def _add_ui_routes(
     @ui_router.get("/new", response_class=HTMLResponse)
     async def editor_new(
         request: Request,
-        user: Optional[dict] = Depends(auth_func),
+        user: dict | None = Depends(auth_func),
     ) -> Any:
         return templates.TemplateResponse(
             request=request,
@@ -295,7 +295,7 @@ def _add_ui_routes(
     async def editor_edit(
         request: Request,
         slug: str = slug_path,
-        user: Optional[dict] = Depends(auth_func),
+        user: dict | None = Depends(auth_func),
     ) -> Any:
         path = _post_path(slug, posts_dirname)
         if not path.is_file():
