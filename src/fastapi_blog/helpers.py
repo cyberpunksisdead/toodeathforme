@@ -15,7 +15,7 @@ from .models import frontmatter_model
 logger = logging.getLogger(__name__)
 
 
-@functools.lru_cache
+@functools.lru_cache(maxsize=128)
 def list_posts(
     published: bool = True,
     posts_dirname: str = "posts",
