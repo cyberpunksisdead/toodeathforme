@@ -177,9 +177,9 @@ class HomeView(CustomView):
         }
 
         return templates.TemplateResponse(
+            request,
             "home.html",
             {
-                "request": request,
                 "posts": latest_posts,
                 "stats": stats,
                 "top_tags": top_tags,
