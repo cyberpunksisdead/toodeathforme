@@ -215,3 +215,107 @@ This fix helps meet security requirements for:
 **Status**: ✅ Fixed in commit `91a04f5`  
 **Severity**: 🔴 CRITICAL  
 **Impact**: High - All user passwords now properly secured
+
+---
+
+## Update: Improved Password Validation (commit 71d2fa4)
+
+### Problem with Original Implementation
+
+❌ **Silent Truncation**: Passwords over 72 bytes were silently truncated without user notification
+- User enters: `"VeryLongPasswordWith100Characters..."`
+- Stored as: `"VeryLongPasswordWith100Cha"` (truncated)
+- User doesn't know their password was changed!
+
+### New Implementation: Clear Error Messages
+
+✅ **Explicit Rejection**: Passwords that don't meet requirements are rejected with helpful messages
+
+#### Error Messages:
+
+**1. Too Short:**
+```
+Password is too short. 
+Minimum length: 8 characters. 
+Current length: 5 characters.
+```
+
+**2. Too Long:**
+```
+Password is too long. 
+Maximum length: 128 characters. 
+Current length: 150 characters.
+```
+
+**3. Byte Limit Exceeded (Unicode):**
+```
+Password exceeds bcrypt limit of 72 bytes when encoded. 
+Current size: 100 bytes. 
+Tip: Unicode characters take multiple bytes. 
+Try using fewer special characters or a shorter password.
+```
+
+### Password Requirements:
+
+| Requirement | Value | Reason |
+|------------|-------|--------|
+| **Minimum Length** | 8 characters | Industry standard for security |
+| **Maximum Length** | 128 characters | Reasonable upper limit |
+| **Byte Limit** | 72 bytes | bcrypt algorithm limitation |
+
+### Examples:
+
+#### Valid Passwords ✅
+```python
+"Password1"           # 9 chars, simple
+"MySecureP@ss123!"    # 17 chars, strong
+"Пароль123!"          # Unicode, within limits
+"a" * 72              # At byte limit, OK
+```
+
+#### Invalid Passwords ❌
+```python
+"short"               # Too short (5 < 8)
+"x" * 150             # Too long (150 > 128)
+"a" * 100             # Over byte limit (100 > 72)
+"й" * 50              # Unicode: 100 bytes (50*2 > 72)
+```
+
+### Testing:
+
+Added comprehensive test for error messages:
+```python
+def test_password_error_messages():
+    """Test that error messages are helpful and specific."""
+    # Verifies all error scenarios have clear, actionable messages
+```
+
+**Total Tests**: 41 passed (8 password validation tests)
+
+### User Experience:
+
+**Before (Bad UX):**
+- User sets long password
+- Password silently truncated
+- User confused why login doesn't work with full password
+- Security issue: user thinks password is longer than it is
+
+**After (Good UX):**
+- User sets long password
+- Clear error message with current/max lengths
+- User adjusts password accordingly
+- User knows exactly what requirements are
+- No surprises!
+
+### Benefits:
+
+1. ✅ **Transparency**: Users know exactly what happened
+2. ✅ **Security**: No silent data modification
+3. ✅ **UX**: Clear, actionable error messages
+4. ✅ **Education**: Users learn about Unicode byte limits
+5. ✅ **Compliance**: Proper error handling for audits
+
+---
+
+**Status**: ✅ Enhanced in commit `71d2fa4`  
+**Impact**: Better UX, no silent truncation, clear error messages
