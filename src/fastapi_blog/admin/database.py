@@ -17,7 +17,7 @@ def get_database_url() -> str:
     return os.getenv("DATABASE_URL", "sqlite+aiosqlite:///./data/app.db")
 
 
-def create_engine_and_session(database_url: str = None):
+def create_engine_and_session(database_url: str | None = None):
     """Create async engine and session factory."""
     url = database_url or get_database_url()
 

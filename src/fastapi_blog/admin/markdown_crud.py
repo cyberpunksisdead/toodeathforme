@@ -191,6 +191,13 @@ class MarkdownEditView(CustomView):
     async def render(self, request: Request, templates: Jinja2Templates) -> Response:
         """Render edit form."""
         slug = request.path_params.get("slug")
+        if not slug:
+            return templates.TemplateResponse(
+                request=request,
+                name="error.html",
+                context={"error": "Missing slug parameter"},
+                status_code=400,
+            )
         post = self.manager.load_post(slug)
 
         if not post:

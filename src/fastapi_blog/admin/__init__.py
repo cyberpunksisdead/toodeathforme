@@ -35,10 +35,10 @@ def add_admin_to_app(
     *,
     base_url: str = "/dashboard",
     title: str = "Admin Panel",
-    database_url: str = None,
+    database_url: str | None = None,
     admin_username: str = "admin",
     admin_password: str = "Admin123!",
-    secret_key: str = None,
+    secret_key: str | None = None,
     add_session_middleware: bool = True,
     init_database: bool = True,
 ) -> Admin:
