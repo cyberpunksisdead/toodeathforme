@@ -2,6 +2,20 @@
 
 This demonstrates the new include_api parameter that makes
 REST API optional instead of requiring separate add_editor_to_app().
+
+Run this example:
+    cd tests/examples
+    uvicorn api_optional:app --reload
+
+Then check /docs:
+    - Public blog endpoints (GET /blog/*)
+    - REST API endpoints (POST/PUT/DELETE /api/posts/*) ← These appear in /docs!
+
+Compare with quickstart.py:
+    - quickstart.py: Only admin UI (no REST API in /docs)
+    - api_optional.py: Admin UI + REST API (REST API visible in /docs)
+
+Remember: Admin panel (/admin) is a web UI, not REST API.
 """
 
 from fastapi import FastAPI

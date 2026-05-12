@@ -48,6 +48,47 @@ Then open http://localhost:8000/admin (login: `admin` / `Admin123!`)
 - 🚀 Python 3.12+ and 3.13 support
 - 🐳 Docker support
 
+## Architecture Overview
+
+### Understanding the Three Types of Endpoints
+
+FastAPI Blog provides three distinct systems:
+
+#### 1. 📖 Public Blog (`/blog`)
+- **Purpose**: Read-only public blog posts
+- **Access**: Public (no authentication)
+- **Documentation**: ✅ Visible in `/docs` (Swagger)
+- **Type**: REST API endpoints
+
+#### 2. 🎨 Admin Panel (`/admin`)
+- **Purpose**: Web-based content management interface
+- **Access**: Requires login (username/password)
+- **Documentation**: ❌ Not in `/docs` — it's a UI, not an API!
+- **Type**: HTML web application (powered by starlette-admin)
+- **Use for**: Visual editing, user management, content creation
+
+#### 3. 🔧 REST API (`/api/posts`)
+- **Purpose**: Programmatic post management
+- **Access**: Requires authentication
+- **Documentation**: ✅ Visible in `/docs` **only if** `include_api=True`
+- **Type**: REST API endpoints
+- **Use for**: Scripts, automation, integrations
+
+### Why isn't the Admin Panel in /docs?
+
+The admin panel is a **web application** (like WordPress Admin or Django Admin), not a REST API. It uses HTML forms, sessions, and cookies for humans to interact with. Swagger/OpenAPI documents REST APIs, not web UIs.
+
+**If you need programmatic access**, enable the REST API:
+
+```python
+fastapi_blog.add_blog_to_fastapi(
+    app,
+    include_api=True,  # ← This adds REST API to /docs
+)
+```
+
+---
+
 ## Basic Usage
 
 ### Quick Setup with Admin Panel
@@ -82,6 +123,37 @@ That's it! Now you have:
 - 📝 Blog at `/blog`
 - ⚙️ Admin panel at `/admin`
 - 🔒 Automatic database initialization
+
+### Setup with REST API (for programmatic access)
+
+```python
+from fastapi import FastAPI
+import fastapi_blog
+
+app = FastAPI()
+
+# Add blog with REST API enabled
+fastapi_blog.add_blog_to_fastapi(
+    app,
+    prefix="blog",
+    include_api=True,  # ← Enable REST API
+    api_prefix="/api/posts",
+    api_require_auth=True,
+)
+
+# Add admin panel for authentication
+fastapi_blog.add_admin_to_app(
+    app,
+    admin_username="admin",
+    admin_password="change-me-in-production",
+    secret_key="your-secret-key",
+)
+```
+
+Now you have:
+- 📝 Blog at `/blog`
+- ⚙️ Admin panel at `/admin` (web UI)
+- 🔧 REST API at `/api/posts/*` (visible in `/docs`)
 
 ### Basic Setup (Blog Only)
 

@@ -40,7 +40,9 @@ def add_blog_to_fastapi(
         sanitize_html: Sanitize HTML in markdown content
         posts_dirname: Directory containing blog posts
         pages_dirname: Directory containing pages
-        include_api: Include REST API for post management (default: False)
+        include_api: Include REST API for post management (default: False).
+                     When True, adds REST endpoints visible in /docs.
+                     Note: Admin panel (/admin) is separate - it's a web UI, not REST API.
         api_prefix: URL prefix for REST API (default: '/api/posts')
         api_require_auth: Require authentication for API (default: True)
 

@@ -5,12 +5,16 @@ Run this example:
     uvicorn quickstart:app --reload
 
 Then open:
-    Blog:  http://localhost:8000/blog
-    Admin: http://localhost:8000/admin
+    Blog:     http://localhost:8000/blog
+    Admin UI: http://localhost:8000/admin (web interface)
+    API Docs: http://localhost:8000/docs (REST API docs)
 
 Login credentials:
     Username: admin
     Password: Admin123!
+
+Note: Admin panel is a web UI (not REST API), so it won't appear in /docs.
+      If you need REST API for posts, see api_optional.py example.
 """
 
 from pathlib import Path

@@ -23,6 +23,48 @@ Then open:
 
 ---
 
+## 🏛️ Architecture: What Goes Where?
+
+### Three Types of Endpoints
+
+| Endpoint | Type | Purpose | In `/docs`? |
+|----------|------|---------|-------------|
+| `/blog` | REST API | Public blog (read-only) | ✅ Yes |
+| `/admin` | Web UI | Content management interface | ❌ No (it's HTML, not API) |
+| `/api/posts` | REST API | Programmatic post management | ✅ Yes (if `include_api=True`) |
+
+### 🤔 Why Isn't Admin in /docs?
+
+**The admin panel is a web application, not a REST API.**
+
+Think of it like:
+- WordPress Admin — web interface for humans
+- WordPress REST API — programmatic interface for code
+
+FastAPI `/docs` (Swagger) documents **REST APIs**, not web UIs.
+
+### ❓ When to Use What?
+
+**Use Admin Panel (`/admin`) when:**
+- 👤 You want to manage content visually
+- 🖋️ You need a user-friendly interface
+- 👥 Multiple users need different permissions
+
+**Use REST API (`/api/posts`) when:**
+- 🤖 You need programmatic access
+- 🔄 Building integrations or automation
+- 📦 Importing/exporting content via scripts
+
+**To enable REST API:**
+```python
+fastapi_blog.add_blog_to_fastapi(
+    app,
+    include_api=True,  # ← Adds /api/posts to /docs
+)
+```
+
+---
+
 ## 📚 Available Examples
 
 Run different examples using the demo script:
@@ -115,9 +157,45 @@ fastapi_blog.add_admin_to_app(
 ```
 
 That's it! Now you have:
-- Blog at `/blog`
-- Admin panel at `/admin`
-- Automatic database initialization
+- 📝 Blog at `/blog` (public, visible in `/docs`)
+- 🎨 Admin panel at `/admin` (web UI, not in `/docs`)
+- 🔒 Automatic database initialization
+
+### Example with REST API
+
+If you need programmatic access to manage posts:
+
+```python
+from fastapi import FastAPI
+import fastapi_blog
+
+app = FastAPI()
+
+# Add blog with REST API enabled
+fastapi_blog.add_blog_to_fastapi(
+    app,
+    prefix="blog",
+    include_api=True,  # ← Enable REST API
+    api_prefix="/api/posts",
+)
+
+# Add admin for authentication
+fastapi_blog.add_admin_to_app(
+    app,
+    admin_username="admin",
+    admin_password="change-me",
+    secret_key="your-secret-key",
+)
+```
+
+Now `/docs` will show:
+- ✅ `GET /blog/*` - Public blog endpoints
+- ✅ `POST /api/posts/create/{slug}` - Create post (requires auth)
+- ✅ `PUT /api/posts/update/{slug}` - Update post (requires auth)
+- ✅ `DELETE /api/posts/delete/{slug}` - Delete post (requires auth)
+- And more...
+
+❌ Admin panel (`/admin`) won't be in `/docs` - it's a web UI, not an API!
 
 ### Create Your First Post
 
