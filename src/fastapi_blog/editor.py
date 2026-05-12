@@ -18,11 +18,13 @@ from .models import (
 
 
 async def require_authentication(request: Request) -> dict:
-    """Require authentication via session (admin) or JWT token.
+    """Require authentication via session cookie.
     
-    Checks:
-    1. Session cookie (starlette-admin)
-    2. JWT token in cookie or Authorization header (external auth system)
+    This function is part of fastapi-blog and only checks session-based
+    authentication (starlette-admin SessionMiddleware).
+    
+    For JWT authentication, the parent application should override this
+    dependency or add custom middleware.
     
     Returns:
         dict with user info if authenticated
@@ -30,46 +32,19 @@ async def require_authentication(request: Request) -> dict:
     Raises:
         HTTPException 401 if not authenticated
     """
-    # Check session cookie (admin panel)
+    # Check session cookie (set by starlette-admin or SessionMiddleware)
     user = request.session.get('user')
     if user:
-        return {'username': user, 'is_admin': request.session.get('is_admin', False)}
+        return {
+            'username': user,
+            'is_admin': request.session.get('is_admin', False)
+        }
     
-    # Check JWT token (if external auth is configured)
-    try:
-        # Try to get token from cookie
-        token = request.cookies.get('access_token')
-        if token and token.startswith('Bearer '):
-            token = token[7:]
-        
-        # Try Authorization header if no cookie
-        if not token:
-            auth_header = request.headers.get('Authorization')
-            if auth_header and auth_header.startswith('Bearer '):
-                token = auth_header[7:]
-        
-        if token:
-            # Import here to avoid circular dependency
-            try:
-                import jwt
-                from backend.auth.config import SECRET_KEY, ALGORITHM
-                from backend.auth.models import User
-                
-                payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-                email = payload.get('sub')
-                if email:
-                    user_obj = User.get_by_email(email)
-                    if user_obj and user_obj.is_active:
-                        return {'username': email, 'is_admin': True}
-            except (ImportError, jwt.JWTError, AttributeError):
-                pass
-    except Exception:
-        pass
-    
+    # No valid session found
     raise HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
-        detail='Authentication required',
-        headers={'WWW-Authenticate': 'Bearer'},
+        detail='Authentication required. Please login via admin panel.',
+        headers={'WWW-Authenticate': 'Session'},
     )
 
 
@@ -114,6 +89,7 @@ def add_editor_to_app(
     strict: bool = True,
     ui: bool = True,
     ui_prefix: str = "/admin/editor",
+    require_auth: bool = True,
 ) -> FastAPI:
     api_router = APIRouter(prefix=prefix, tags=["editor"])
     Payload = payload_model(strict)
@@ -130,11 +106,14 @@ def add_editor_to_app(
         data = _parse_file(path)
         return {"slug": slug, **data}
 
+    # Setup authentication dependency
+    auth_dep = Depends(require_authentication) if require_auth else None
+    
     @api_router.post("/create/{slug}", status_code=status.HTTP_201_CREATED)
     async def create_post(
         payload: Payload,  # type: ignore[valid-type]
         slug: str = slug_path,
-        user: dict = Depends(require_authentication),
+        user: dict = auth_dep,  # type: ignore[assignment]
     ) -> dict[str, str]:
         path = _post_path(slug, posts_dirname)
         if path.exists():
@@ -151,7 +130,7 @@ def add_editor_to_app(
     async def update_post(
         payload: Payload,  # type: ignore[valid-type]
         slug: str = slug_path,
-        user: dict = Depends(require_authentication),
+        user: dict = auth_dep,  # type: ignore[assignment]
     ) -> dict[str, str]:
         path = _post_path(slug, posts_dirname)
         if not path.is_file():
@@ -166,7 +145,7 @@ def add_editor_to_app(
     @api_router.delete("/delete/{slug}")
     async def delete_post(
         slug: str = slug_path,
-        user: dict = Depends(require_authentication),
+        user: dict = auth_dep,  # type: ignore[assignment]
     ) -> JSONResponse:
         path = _post_path(slug, posts_dirname)
         if not path.is_file():
@@ -181,7 +160,7 @@ def add_editor_to_app(
     @api_router.post("/save")
     async def save_post(
         data: dict[str, Any],
-        user: dict = Depends(require_authentication),
+        user: dict = auth_dep,  # type: ignore[assignment]
     ) -> dict[str, str]:
         """Save (create or update) a post. Used by admin panel.
         

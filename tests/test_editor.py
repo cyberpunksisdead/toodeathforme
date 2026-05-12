@@ -19,7 +19,7 @@ def app_dir(tmp_path, monkeypatch):
 def client(app_dir):
     app = FastAPI()
     app = add_blog_to_fastapi(app, prefix="blog")
-    app = add_editor_to_app(app)
+    app = add_editor_to_app(app, require_auth=False)  # Disable auth for tests
     return TestClient(app)
 
 
@@ -29,7 +29,7 @@ def loose_client(app_dir):
     app = add_blog_to_fastapi(
         app, prefix="blog", strict_frontmatter=False, sanitize_html=False
     )
-    app = add_editor_to_app(app, strict=False)
+    app = add_editor_to_app(app, strict=False, require_auth=False)  # Disable auth for tests
     return TestClient(app)
 
 
