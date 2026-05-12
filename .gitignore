@@ -175,3 +175,4 @@ changelog.json
 /tmp
 !/tmp/.keep
 
+*.bak
