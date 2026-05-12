@@ -134,15 +134,30 @@ class HomeView(CustomView):
         posts_dir = get_posts_directory()
         MarkdownPost.configure(posts_dir)
 
-        # Get all posts
-        all_posts = MarkdownPost.list_all()
+        # Get all posts (with error handling for malformed posts)
+        try:
+            all_posts = MarkdownPost.list_all()
+        except Exception:
+            # If loading fails, return empty state
+            all_posts = []
 
         # Filter published posts
         published_posts = [p for p in all_posts if p.published]
         draft_posts = [p for p in all_posts if not p.published]
 
         # Get latest posts (sorted by date, descending)
-        latest_posts = sorted(published_posts, key=lambda p: p.date, reverse=True)[:10]
+        # Handle timezone-aware and naive datetime comparison
+        try:
+            latest_posts = sorted(published_posts, key=lambda p: p.date, reverse=True)[
+                :10
+            ]
+        except TypeError:
+            # If datetime comparison fails, sort by string representation
+            latest_posts = sorted(
+                published_posts,
+                key=lambda p: p.date.isoformat() if p.date else "",
+                reverse=True,
+            )[:10]
 
         # Collect all tags
         all_tags: dict[str, int] = {}
