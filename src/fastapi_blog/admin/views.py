@@ -127,7 +127,7 @@ class HomeView(CustomView):
 
     async def render(self, request: Request, templates: Jinja2Templates) -> Response:
         """Render custom home page with blog statistics."""
-        from ..markdown_model import MarkdownPost
+        from .markdown_model import MarkdownPost
 
         # Get all posts
         all_posts = MarkdownPost.list_all()
