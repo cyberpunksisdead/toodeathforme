@@ -3,7 +3,7 @@ from typing import Any
 
 import jinja2
 import yaml
-from fastapi import APIRouter, FastAPI, HTTPException, Path, Request, status, Depends
+from fastapi import APIRouter, Depends, FastAPI, HTTPException, Path, Request, status
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
 
@@ -31,38 +31,34 @@ async def require_authentication(request: Request) -> dict:
 
     Raises:
         HTTPException 401 if not authenticated
+
     """
     # Check session cookie (set by starlette-admin or SessionMiddleware)
-    user = request.session.get('user')
+    user = request.session.get("user")
     if user:
-        return {
-            'username': user,
-            'is_admin': request.session.get('is_admin', False)
-        }
+        return {"username": user, "is_admin": request.session.get("is_admin", False)}
 
     # No valid session found
     raise HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
-        detail='Authentication required. Please login via admin panel.',
-        headers={'WWW-Authenticate': 'Session'},
+        detail="Authentication required. Please login via admin panel.",
+        headers={"WWW-Authenticate": "Session"},
     )
 
 
 async def optional_authentication(request: Request) -> dict | None:
-    """Optional authentication - returns None if not authenticated.
+    """Return user info if authenticated, None otherwise.
 
     This is used when require_auth=False (e.g., in tests).
     Does NOT raise 401, just returns None.
 
     Returns:
         dict with user info if authenticated, None otherwise
+
     """
-    user = request.session.get('user')
+    user = request.session.get("user")
     if user:
-        return {
-            'username': user,
-            'is_admin': request.session.get('is_admin', False)
-        }
+        return {"username": user, "is_admin": request.session.get("is_admin", False)}
     return None
 
 
@@ -71,8 +67,7 @@ def _post_path(slug: str, posts_dirname: str) -> pathlib.Path:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=(
-                "Invalid slug. Allowed: lowercase letters, digits, "
-                "hyphens (max 100)."
+                "Invalid slug. Allowed: lowercase letters, digits, hyphens (max 100)."
             ),
         )
     return pathlib.Path(posts_dirname) / f"{slug}.md"
@@ -197,15 +192,15 @@ def add_editor_to_app(
                 "content": "..."
             }
         """
-        slug = data.get('slug')
+        slug = data.get("slug")
         if not slug:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Slug is required",
             )
 
-        frontmatter = data.get('frontmatter', {})
-        content = data.get('content', '')
+        frontmatter = data.get("frontmatter", {})
+        content = data.get("content", "")
 
         # Create payload using the model
         try:

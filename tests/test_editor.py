@@ -222,6 +222,7 @@ def test_ui_disabled(app_dir):
 # Authentication Tests
 # ============================================================================
 
+
 def test_create_post_requires_auth(auth_client, app_dir):
     """Test that creating a post without authentication fails."""
     response = auth_client.post("/api/posts/create/test-post", json=VALID_PAYLOAD)
