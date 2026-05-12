@@ -9,6 +9,11 @@ from starlette_admin.contrib.sqla import ModelView
 # Lazy import to avoid initialization errors
 _pwd_context = None
 
+# Password constraints
+MIN_PASSWORD_LENGTH = 8
+MAX_PASSWORD_LENGTH = 128
+BCRYPT_MAX_BYTES = 72  # bcrypt limitation
+
 
 def get_pwd_context():
     """Get or create password hashing context (lazy initialization)."""
@@ -18,6 +23,36 @@ def get_pwd_context():
 
         _pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
     return _pwd_context
+
+
+def validate_and_prepare_password(password: str) -> str:
+    """Validate password length and prepare for bcrypt hashing.
+
+    Args:
+        password: Plain text password
+
+    Returns:
+        Password truncated to bcrypt max bytes if needed
+
+    Raises:
+        ValueError: If password is too short or too long
+
+    """
+    if len(password) < MIN_PASSWORD_LENGTH:
+        raise ValueError(
+            f"Password must be at least {MIN_PASSWORD_LENGTH} characters long"
+        )
+    if len(password) > MAX_PASSWORD_LENGTH:
+        raise ValueError(f"Password must not exceed {MAX_PASSWORD_LENGTH} characters")
+
+    # Truncate to bcrypt's 72 byte limit if needed
+    # This is safe - bcrypt only uses first 72 bytes anyway
+    password_bytes = password.encode("utf-8")
+    if len(password_bytes) > BCRYPT_MAX_BYTES:
+        password_bytes = password_bytes[:BCRYPT_MAX_BYTES]
+        password = password_bytes.decode("utf-8", errors="ignore")
+
+    return password
 
 
 class UserModelView(ModelView):
@@ -33,8 +68,10 @@ class UserModelView(ModelView):
     ) -> None:
         """Hash password before creating user."""
         if "hashed_password" in data and data["hashed_password"]:
+            # Validate and prepare password
+            password = validate_and_prepare_password(data["hashed_password"])
             # Hash the plain text password
-            data["hashed_password"] = get_pwd_context().hash(data["hashed_password"])
+            data["hashed_password"] = get_pwd_context().hash(password)
         await super().before_create(request, data, obj)
 
     async def before_edit(
@@ -45,9 +82,9 @@ class UserModelView(ModelView):
             # Only hash if password is being updated (non-empty)
             # If field is empty, keep existing hash
             if data["hashed_password"] != obj.hashed_password:
-                data["hashed_password"] = get_pwd_context().hash(
-                    data["hashed_password"]
-                )
+                # Validate and prepare password
+                password = validate_and_prepare_password(data["hashed_password"])
+                data["hashed_password"] = get_pwd_context().hash(password)
         await super().before_edit(request, data, obj)
 
 
