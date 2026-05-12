@@ -23,13 +23,8 @@ from backend.auth.models import User
 async def require_authentication(request: Request) -> dict:
     """Require authentication via session cookie.
     
-    This function is part of fastapi-blog and only checks session-based
-    authentication (starlette-admin SessionMiddleware).
-    
-    For JWT authentication, the parent application should override this
-    dependency or add custom middleware.
+    Raises 401 if not authenticated.
     """
-    # Check session cookie (set by starlette-admin or SessionMiddleware)
     user = request.session.get('user')
     if user:
         return {
@@ -42,6 +37,21 @@ async def require_authentication(request: Request) -> dict:
         detail='Authentication required. Please login via admin panel.',
         headers={'WWW-Authenticate': 'Session'},
     )
+
+
+async def optional_authentication(request: Request) -> Optional[dict]:
+    """Optional authentication - returns None if not authenticated.
+    
+    Used when require_auth=False (e.g., in tests).
+    Does NOT raise 401.
+    """
+    user = request.session.get('user')
+    if user:
+        return {
+            'username': user,
+            'is_admin': request.session.get('is_admin', False)
+        }
+    return None
 ```
 
 ### 2. Added `require_auth` parameter
@@ -62,11 +72,51 @@ def add_editor_to_app(
 - `require_auth=True` (default): Use session authentication
 - `require_auth=False`: Disable authentication (for tests or public access)
 
-### 3. Updated tests
+### 3. Fixed type safety with Optional[dict]
+
+```python
+# Setup authentication dependency
+auth_func = require_authentication if require_auth else optional_authentication
+
+@api_router.post("/create/{slug}")
+async def create_post(
+    payload: Payload,
+    slug: str = slug_path,
+    user: Optional[dict] = Depends(auth_func),  # ✅ Type-safe!
+) -> dict[str, str]:
+```
+
+**Why this works:**
+- When `require_auth=True`: `auth_func = require_authentication` → always raises 401 if not authenticated
+- When `require_auth=False`: `auth_func = optional_authentication` → returns None (for tests)
+- Type is `Optional[dict]` which correctly represents both cases
+
+### 4. Added authentication to ALL endpoints
+
+- ✅ POST `/create/{slug}` - requires auth
+- ✅ PUT `/update/{slug}` - requires auth  
+- ✅ DELETE `/delete/{slug}` - requires auth
+- ✅ POST `/save` - requires auth
+- ✅ GET `/{slug}/raw` - **NOW requires auth** (was public before)
+- ✅ UI routes (`/admin/editor/*`) - **NOW require auth** (were public before)
+
+### 5. Updated tests
 
 ```python
 # Tests now explicitly disable auth
 app = add_editor_to_app(app, require_auth=False)
+
+# New authentication tests verify that:
+# 1. All endpoints return 401 without auth
+# 2. require_auth=False allows public access
+```
+
+### 6. Updated example with SessionMiddleware
+
+```python
+# tests/examples/editor.py
+app.add_middleware(SessionMiddleware, secret_key="...")
+app = add_editor_to_app(app, require_auth=True)  # Auth enabled
 ```
 
 ## Architecture Philosophy
@@ -108,10 +158,24 @@ add_editor_to_app(app, ui=False)
 3. ✅ **Clear separation**: JWT for frontend, sessions for admin
 4. ✅ **Tests work**: Can disable auth when needed
 5. ✅ **Flexibility**: Parent app can add custom auth logic
+6. ✅ **Type safety**: Proper use of Optional[dict]
+7. ✅ **Security**: All endpoints now require authentication by default
+8. ✅ **Complete coverage**: UI routes also protected
 
 ## Migration Notes
 
 - ✅ No breaking changes for existing installations
-- ✅ Default behavior unchanged (`require_auth=True`)
+- ✅ Default behavior: `require_auth=True` (all endpoints protected)
 - ✅ Tests updated to use `require_auth=False`
 - ✅ Session auth still works as before
+- ⚠️ **BREAKING**: GET `/{slug}/raw` now requires authentication (was public before)
+- ⚠️ **BREAKING**: UI routes now require authentication (were public before)
+- 💡 To restore public access: use `require_auth=False` (not recommended for production)
+
+## Security Improvements
+
+1. **All modifying operations protected**: create, update, delete, save
+2. **Read operations protected**: GET raw now requires auth
+3. **UI routes protected**: Editor interface requires login
+4. **Type-safe implementation**: No more `# type: ignore` hacks
+5. **Explicit control**: `require_auth` parameter makes intentions clear

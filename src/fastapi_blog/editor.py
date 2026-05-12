@@ -48,6 +48,24 @@ async def require_authentication(request: Request) -> dict:
     )
 
 
+async def optional_authentication(request: Request) -> Optional[dict]:
+    """Optional authentication - returns None if not authenticated.
+    
+    This is used when require_auth=False (e.g., in tests).
+    Does NOT raise 401, just returns None.
+    
+    Returns:
+        dict with user info if authenticated, None otherwise
+    """
+    user = request.session.get('user')
+    if user:
+        return {
+            'username': user,
+            'is_admin': request.session.get('is_admin', False)
+        }
+    return None
+
+
 def _post_path(slug: str, posts_dirname: str) -> pathlib.Path:
     if not is_valid_slug(slug):
         raise HTTPException(
@@ -96,7 +114,10 @@ def add_editor_to_app(
     slug_path = Path(pattern=SLUG_PATTERN, max_length=100)
 
     @api_router.get("/{slug}/raw")
-    async def get_raw(slug: str = slug_path) -> dict[str, Any]:
+    async def get_raw(
+        slug: str = slug_path,
+        user: Optional[dict] = Depends(auth_func),
+    ) -> dict[str, Any]:
         path = _post_path(slug, posts_dirname)
         if not path.is_file():
             raise HTTPException(
@@ -107,13 +128,15 @@ def add_editor_to_app(
         return {"slug": slug, **data}
 
     # Setup authentication dependency
-    auth_dep = Depends(require_authentication) if require_auth else None
+    # When require_auth=True: Depends(require_authentication) - raises 401 if not authenticated
+    # When require_auth=False: Depends(optional_authentication) - returns None if not authenticated
+    auth_func = require_authentication if require_auth else optional_authentication
     
     @api_router.post("/create/{slug}", status_code=status.HTTP_201_CREATED)
     async def create_post(
         payload: Payload,  # type: ignore[valid-type]
         slug: str = slug_path,
-        user: dict = auth_dep,  # type: ignore[assignment]
+        user: Optional[dict] = Depends(auth_func),
     ) -> dict[str, str]:
         path = _post_path(slug, posts_dirname)
         if path.exists():
@@ -130,7 +153,7 @@ def add_editor_to_app(
     async def update_post(
         payload: Payload,  # type: ignore[valid-type]
         slug: str = slug_path,
-        user: dict = auth_dep,  # type: ignore[assignment]
+        user: Optional[dict] = Depends(auth_func),
     ) -> dict[str, str]:
         path = _post_path(slug, posts_dirname)
         if not path.is_file():
@@ -145,7 +168,7 @@ def add_editor_to_app(
     @api_router.delete("/delete/{slug}")
     async def delete_post(
         slug: str = slug_path,
-        user: dict = auth_dep,  # type: ignore[assignment]
+        user: Optional[dict] = Depends(auth_func),
     ) -> JSONResponse:
         path = _post_path(slug, posts_dirname)
         if not path.is_file():
@@ -160,7 +183,7 @@ def add_editor_to_app(
     @api_router.post("/save")
     async def save_post(
         data: dict[str, Any],
-        user: dict = auth_dep,  # type: ignore[assignment]
+        user: Optional[dict] = Depends(auth_func),
     ) -> dict[str, str]:
         """Save (create or update) a post. Used by admin panel.
         
@@ -207,6 +230,7 @@ def add_editor_to_app(
             ui_prefix=ui_prefix,
             posts_dirname=posts_dirname,
             strict=strict,
+            require_auth=require_auth,
         )
 
     return app
@@ -218,6 +242,7 @@ def _add_ui_routes(
     ui_prefix: str,
     posts_dirname: str,
     strict: bool,
+    require_auth: bool,
 ) -> None:
     env = jinja2.Environment(
         loader=jinja2.PackageLoader("fastapi_blog", "templates"),
@@ -226,12 +251,18 @@ def _add_ui_routes(
     templates = Jinja2Templates(env=env)
     ui_router = APIRouter(prefix=ui_prefix, tags=["editor-ui"])
     slug_path = Path(pattern=SLUG_PATTERN, max_length=100)
+    
+    # Setup authentication for UI routes
+    auth_func = require_authentication if require_auth else optional_authentication
 
     def _context(**extra: Any) -> dict[str, Any]:
         return {"admin_prefix": ui_prefix, "api_prefix": api_prefix, **extra}
 
     @ui_router.get("/", response_class=HTMLResponse)
-    async def editor_index(request: Request) -> Any:
+    async def editor_index(
+        request: Request,
+        user: Optional[dict] = Depends(auth_func),
+    ) -> Any:
         posts = helpers.list_posts(
             posts_dirname=posts_dirname, strict=strict, published=True
         )
@@ -245,7 +276,10 @@ def _add_ui_routes(
         )
 
     @ui_router.get("/new", response_class=HTMLResponse)
-    async def editor_new(request: Request) -> Any:
+    async def editor_new(
+        request: Request,
+        user: Optional[dict] = Depends(auth_func),
+    ) -> Any:
         return templates.TemplateResponse(
             request=request,
             name="admin/edit.html",
@@ -258,7 +292,11 @@ def _add_ui_routes(
         )
 
     @ui_router.get("/{slug}", response_class=HTMLResponse)
-    async def editor_edit(request: Request, slug: str = slug_path) -> Any:
+    async def editor_edit(
+        request: Request,
+        slug: str = slug_path,
+        user: Optional[dict] = Depends(auth_func),
+    ) -> Any:
         path = _post_path(slug, posts_dirname)
         if not path.is_file():
             raise HTTPException(

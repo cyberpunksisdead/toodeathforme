@@ -1,6 +1,7 @@
 import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
+from starlette.middleware.sessions import SessionMiddleware
 
 from fastapi_blog import add_blog_to_fastapi, add_editor_to_app, helpers
 
@@ -30,6 +31,16 @@ def loose_client(app_dir):
         app, prefix="blog", strict_frontmatter=False, sanitize_html=False
     )
     app = add_editor_to_app(app, strict=False, require_auth=False)  # Disable auth for tests
+    return TestClient(app)
+
+
+@pytest.fixture
+def auth_client(app_dir):
+    """Client with authentication enabled."""
+    app = FastAPI()
+    app.add_middleware(SessionMiddleware, secret_key="test-secret-key")
+    app = add_blog_to_fastapi(app, prefix="blog")
+    app = add_editor_to_app(app, require_auth=True)  # Auth enabled
     return TestClient(app)
 
 
@@ -204,3 +215,113 @@ def test_ui_disabled(app_dir):
     ui_client = TestClient(app)
     response = ui_client.get("/admin/editor/")
     assert response.status_code == 404
+
+
+# ============================================================================
+# Authentication Tests
+# ============================================================================
+
+def test_create_post_requires_auth(auth_client, app_dir):
+    """Test that creating a post without authentication fails."""
+    response = auth_client.post("/api/posts/create/test-post", json=VALID_PAYLOAD)
+    assert response.status_code == 401
+    assert "authentication required" in response.json()["detail"].lower()
+
+
+def test_update_post_requires_auth(auth_client, app_dir):
+    """Test that updating a post without authentication fails."""
+    # Create post first (without auth, so it will fail)
+    (app_dir / "posts" / "test-post.md").write_text(
+        "---\ntitle: Test\ndate: '2026-01-01'\npublished: true\n---\nbody\n"
+    )
+    response = auth_client.put("/api/posts/update/test-post", json=VALID_PAYLOAD)
+    assert response.status_code == 401
+
+
+def test_delete_post_requires_auth(auth_client, app_dir):
+    """Test that deleting a post without authentication fails."""
+    (app_dir / "posts" / "test-post.md").write_text(
+        "---\ntitle: Test\ndate: '2026-01-01'\npublished: true\n---\nbody\n"
+    )
+    response = auth_client.delete("/api/posts/delete/test-post")
+    assert response.status_code == 401
+
+
+def test_get_raw_requires_auth(auth_client, app_dir):
+    """Test that getting raw post data without authentication fails."""
+    (app_dir / "posts" / "test-post.md").write_text(
+        "---\ntitle: Test\ndate: '2026-01-01'\npublished: true\n---\nbody\n"
+    )
+    response = auth_client.get("/api/posts/test-post/raw")
+    assert response.status_code == 401
+
+
+def test_save_post_requires_auth(auth_client, app_dir):
+    """Test that saving a post without authentication fails."""
+    data = {
+        "slug": "test-post",
+        "frontmatter": VALID_PAYLOAD["frontmatter"],
+        "content": VALID_PAYLOAD["content"],
+    }
+    response = auth_client.post("/api/posts/save", json=data)
+    assert response.status_code == 401
+
+
+def test_require_auth_false_allows_public_access(app_dir):
+    """Test that require_auth=False allows public access (for testing)."""
+    app = FastAPI()
+    app = add_blog_to_fastapi(app, prefix="blog")
+    app = add_editor_to_app(app, require_auth=False)  # Public access
+    
+    client = TestClient(app)
+    
+    # Should be able to create without auth
+    response = client.post("/api/posts/create/public-test", json=VALID_PAYLOAD)
+    assert response.status_code == 201
+    assert (app_dir / "posts" / "public-test.md").is_file()
+
+
+def test_create_post_with_auth(app_dir):
+    """Test that creating a post WITH authentication succeeds."""
+    from itsdangerous import URLSafeTimedSerializer
+    
+    app = FastAPI()
+    app.add_middleware(SessionMiddleware, secret_key="test-secret-key")
+    app = add_blog_to_fastapi(app, prefix="blog")
+    app = add_editor_to_app(app, require_auth=True)
+    
+    client = TestClient(app)
+    
+    # Create session cookie manually
+    serializer = URLSafeTimedSerializer("test-secret-key")
+    session_data = {'user': 'testuser', 'is_admin': True}
+    session_cookie = serializer.dumps(session_data)
+    
+    # Make request with session cookie
+    response = client.post(
+        "/api/posts/create/auth-test",
+        json=VALID_PAYLOAD,
+        cookies={"session": session_cookie}
+    )
+    
+    assert response.status_code == 201
+    assert (app_dir / "posts" / "auth-test.md").is_file()
+
+
+def test_ui_routes_require_auth(auth_client, app_dir):
+    """Test that all UI editor routes require authentication."""
+    # Create a test post for edit route
+    (app_dir / "posts" / "test-post.md").write_text(
+        "---\ntitle: Test\ndate: '2026-01-01'\npublished: true\n---\nbody\n"
+    )
+    
+    # Test all UI routes without authentication
+    ui_routes = [
+        "/admin/editor/",
+        "/admin/editor/new",
+        "/admin/editor/test-post",
+    ]
+    
+    for route in ui_routes:
+        response = auth_client.get(route)
+        assert response.status_code == 401, f"Route {route} should require auth"
