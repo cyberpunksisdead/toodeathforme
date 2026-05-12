@@ -116,6 +116,11 @@ def add_editor_to_app(
     Payload = payload_model(strict)
     slug_path = Path(pattern=SLUG_PATTERN, max_length=100)
 
+    # Setup authentication dependency
+    # When require_auth=True: raises 401 if not authenticated
+    # When require_auth=False: returns None if not authenticated
+    auth_func = require_authentication if require_auth else optional_authentication
+
     @api_router.get("/{slug}/raw")
     async def get_raw(
         slug: str = slug_path,
@@ -129,11 +134,6 @@ def add_editor_to_app(
             )
         data = _parse_file(path)
         return {"slug": slug, **data}
-
-    # Setup authentication dependency
-    # When require_auth=True: Depends(require_authentication) - raises 401 if not authenticated
-    # When require_auth=False: Depends(optional_authentication) - returns None if not authenticated
-    auth_func = require_authentication if require_auth else optional_authentication
 
     @api_router.post("/create/{slug}", status_code=status.HTTP_201_CREATED)
     async def create_post(
