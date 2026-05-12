@@ -56,6 +56,9 @@ async def optional_authentication(request: Request) -> dict | None:
         dict with user info if authenticated, None otherwise
 
     """
+    # Check if session exists (SessionMiddleware installed)
+    if "session" not in request.scope:
+        return None
     user = request.session.get("user")
     if user:
         return {"username": user, "is_admin": request.session.get("is_admin", False)}
