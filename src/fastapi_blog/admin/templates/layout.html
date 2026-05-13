@@ -209,17 +209,17 @@ body,
         
         console.log('[Theme Switcher] Initializing...');
         
-        // Only add to header navbar (desktop), not sidebar
-        const navContainers = document.querySelectorAll('header .navbar-nav');
+        // Only add to first header navbar (desktop), not sidebar
+        const navContainer = document.querySelector('header .navbar-nav');
         
-        if (navContainers.length === 0) {
-            console.error('[Theme Switcher] Could not find header navbar elements');
+        if (!navContainer) {
+            console.error('[Theme Switcher] Could not find header navbar element');
             return;
         }
         
-        console.log('[Theme Switcher] Found', navContainers.length, 'navbar containers');
+        console.log('[Theme Switcher] Found navbar container:', navContainer);
         
-        navContainers.forEach(function(navContainer, index) {
+        (function(navContainer) {
             console.log('[Theme Switcher] Adding to container', index, ':', navContainer);
             
             const themeSwitcher = document.createElement('div');
@@ -253,9 +253,9 @@ body,
                     updateThemeIcon(nextTheme);
                 });
             }
-        });
+        })();
         
-        console.log('[Theme Switcher] Added to all navbars');
+        console.log('[Theme Switcher] Added theme switcher to navbar');
         updateThemeIcon(getStoredTheme());
     });
 })();
