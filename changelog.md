@@ -22,6 +22,8 @@
 ### Bug Fixes
 
 * **Admin Panel Fixes**: Various admin panel stability improvements [#bugfix]
+  - Fixed incorrect admin URLs in home page template (markdown-post → posts:*)
+  - Fixed quickstart example instructions (/dashboard → /admin)
   - Fixed deprecated `on_event` causing CI failure (migrated to lifespan)
   - Fixed `TemplateResponse` parameter order in `HomeView`
   - Fixed timezone comparison in `MarkdownPost.list_all`
