@@ -169,30 +169,11 @@
 document.addEventListener('DOMContentLoaded', function() {
     console.log('[Theme Switcher] Initializing...');
     
-    // Try multiple selectors to find the right place to add the theme switcher
-    const selectors = [
-        '.navbar-nav',           // Standard Bootstrap navbar
-        '.navbar .navbar-nav',   // More specific
-        'nav.navbar ul',         // Generic nav approach
-        '.nav-item:last-child',  // Try to find existing nav items
-        'header nav',            // Header navigation
-        'header .navbar',        // Header navbar
-        '.navbar-collapse',      // Navbar collapse area
-    ];
+    // Find all navbar-nav elements (mobile and desktop)
+    const navContainers = document.querySelectorAll('.navbar-nav');
     
-    let navContainer = null;
-    
-    for (const selector of selectors) {
-        navContainer = document.querySelector(selector);
-        if (navContainer) {
-            console.log('[Theme Switcher] Found navbar using selector:', selector);
-            console.log('[Theme Switcher] Container element:', navContainer);
-            break;
-        }
-    }
-    
-    if (!navContainer) {
-        console.error('[Theme Switcher] Could not find navbar element');
+    if (navContainers.length === 0) {
+        console.error('[Theme Switcher] Could not find any navbar elements');
         console.log('[Theme Switcher] Available elements:');
         console.log('  - nav elements:', document.querySelectorAll('nav'));
         console.log('  - navbar elements:', document.querySelectorAll('.navbar'));
@@ -217,23 +198,31 @@ document.addEventListener('DOMContentLoaded', function() {
         return;
     }
     
-    // Create theme switcher element
-    const themeSwitcher = document.createElement('li');
-    themeSwitcher.className = 'nav-item';
-    themeSwitcher.innerHTML = `
-        <button class="theme-switcher nav-link" title="Toggle theme (Light/Dark/Auto)">
-            <svg xmlns="http://www.w3.org/2000/svg" class="icon" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
-                <path d="M3 5a1 1 0 0 1 1 -1h16a1 1 0 0 1 1 1v10a1 1 0 0 1 -1 1h-16a1 1 0 0 1 -1 -1v-10z" />
-                <path d="M7 20h10" />
-                <path d="M9 16v4" />
-                <path d="M15 16v4" />
-            </svg>
-            <span class="theme-text">Auto</span>
-        </button>
-    `;
-    navContainer.appendChild(themeSwitcher);
-    console.log('[Theme Switcher] Added to navbar');
+    console.log('[Theme Switcher] Found', navContainers.length, 'navbar containers');
+    
+    // Add theme switcher to each navbar
+    navContainers.forEach(function(navContainer, index) {
+        console.log('[Theme Switcher] Adding to container', index, ':', navContainer);
+        
+        // Create theme switcher element
+        const themeSwitcher = document.createElement('div');
+        themeSwitcher.className = 'nav-item';
+        themeSwitcher.innerHTML = `
+            <button class="theme-switcher nav-link" title="Toggle theme (Light/Dark/Auto)">
+                <svg xmlns="http://www.w3.org/2000/svg" class="icon" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                    <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                    <path d="M3 5a1 1 0 0 1 1 -1h16a1 1 0 0 1 1 1v10a1 1 0 0 1 -1 1h-16a1 1 0 0 1 -1 -1v-10z" />
+                    <path d="M7 20h10" />
+                    <path d="M9 16v4" />
+                    <path d="M15 16v4" />
+                </svg>
+                <span class="theme-text d-none d-sm-inline">Auto</span>
+            </button>
+        `;
+        navContainer.appendChild(themeSwitcher);
+    });
+    
+    console.log('[Theme Switcher] Added to all navbars');
 });
 </script>
 {% endblock %}
