@@ -7,8 +7,10 @@ Provides starlette-admin based administration interface with:
 """
 
 import os
+import pathlib
 import warnings
 
+from babel.support import Translations
 from fastapi import FastAPI
 from starlette.middleware.sessions import SessionMiddleware
 from starlette_admin.contrib.sqla import Admin
@@ -18,7 +20,6 @@ from .auth_provider import SimpleAuthProvider
 from .database import create_engine_and_session, init_db
 from .fields import MarkdownField, SlugField, TagsField
 from .models import Post, User
-from .views import HomeView, PostModelView, UserModelView
 
 
 try:
@@ -27,6 +28,52 @@ except ImportError:
     # Fallback if i18n is not available
     def _(message: str) -> str:
         return message
+
+
+def _load_custom_translations():
+    """Load and merge custom translations with starlette-admin's built-in translations."""
+    import starlette_admin.i18n
+
+    # Get path to our translations directory
+    package_dir = pathlib.Path(__file__).parent.parent
+    translations_dir = package_dir / "translations"
+
+    if not translations_dir.exists():
+        return
+
+    # Load translations for each locale
+    for locale in ["en", "ru"]:
+        locale_dir = translations_dir / locale / "LC_MESSAGES"
+        mo_file = locale_dir / "admin.mo"
+
+        if mo_file.exists():
+            try:
+                # Load our custom translations
+                with open(mo_file, "rb") as f:
+                    custom_trans = Translations(f, domain="admin")
+
+                # Merge with starlette-admin's built-in translations if they exist
+                if locale in starlette_admin.i18n.translations:
+                    # Add starlette-admin's translations as fallback
+                    custom_trans.add_fallback(starlette_admin.i18n.translations[locale])
+
+                # Replace the translations in starlette-admin's dict
+                starlette_admin.i18n.translations[locale] = custom_trans
+            except Exception as e:
+                warnings.warn(f"Failed to load {locale} translations: {e}")
+
+
+# Load custom translations at module import time, before views are imported
+_load_custom_translations()
+
+# Set a default locale context for lazy_gettext evaluation during import
+# This will be used when view class attributes are defined
+import starlette_admin.i18n
+
+starlette_admin.i18n.set_locale("en")  # Default to English, will be overridden per request
+
+# Import views after translations are loaded and locale is set
+from .views import HomeView, PostModelView, UserModelView
 
 
 # File-based views removed - using CustomView instead
@@ -200,6 +247,7 @@ def add_admin_to_app(
     # Configure i18n if enabled
     i18n_config = None
     if i18n_enabled:
+        # Custom translations are already loaded at module import time
         if i18n_locales is None:
             i18n_locales = ["en", "ru"]
         i18n_config = I18nConfig(
@@ -208,10 +256,16 @@ def add_admin_to_app(
         )
 
     # Create admin instance
-    # Determine labels based on default locale
-    home_label = "Главная" if i18n_default_locale == "ru" else "Home"
-    users_label = "Пользователи" if i18n_default_locale == "ru" else "Users"
-    posts_label = "Посты" if i18n_default_locale == "ru" else "Posts"
+    # Set locale context to default locale for translation
+    from starlette_admin.i18n import set_locale, gettext
+
+    set_locale(i18n_default_locale)
+
+    # Get translated labels for the default locale
+    home_label = gettext("Home")
+    user_label_singular = gettext("User")
+    user_label_plural = gettext("Users")
+    posts_label = gettext("Posts")
 
     admin = Admin(
         engine,
@@ -224,10 +278,12 @@ def add_admin_to_app(
         index_view=HomeView(label=home_label, icon="fa fa-home"),
     )
 
-    # Add model views
+    # Add model views with translated labels
+    # Override label and name to use translated values from default locale
     user_view = UserModelView(User, icon="fa fa-users")
-    user_view.label = users_label
-    user_view.label_plural = users_label
+    user_view.label = user_label_singular
+    user_view.name = user_label_singular  # Used in "New %(name)s" button template
+    user_view.label_plural = user_label_plural
     admin.add_view(user_view)
 
     # Add markdown CRUD views
@@ -240,7 +296,7 @@ def add_admin_to_app(
 
     posts_dir = get_posts_directory()
 
-    # Add list view (shows in menu)
+    # Add list view (shows in menu) with translated label
     posts_list_view = MarkdownListView(posts_dir=posts_dir)
     posts_list_view.label = posts_label
     admin.add_view(posts_list_view)

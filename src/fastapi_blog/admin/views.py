@@ -76,7 +76,7 @@ class UserModelView(ModelView):
 
     # Localization labels
     label = _("User")
-    name = "User"
+    name = _("User")
     label_plural = _("Users")
 
     exclude_fields_from_list = ["hashed_password"]

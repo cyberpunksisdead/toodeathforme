@@ -28,6 +28,9 @@ msgstr "Пользователь"
 msgid "Users"
 msgstr "Пользователи"
 
+msgid "New User"
+msgstr "Добавить пользователя"
+
 msgid "Email"
 msgstr "Email"
 
@@ -101,6 +104,16 @@ msgstr "Фильтр"
 
 msgid "Export"
 msgstr "Экспорт"
+
+# Theme names
+msgid "Light"
+msgstr "Светлая"
+
+msgid "Dark"
+msgstr "Тёмная"
+
+msgid "Auto"
+msgstr "Системная"
 
 # Messages
 msgid "No matching records found"
