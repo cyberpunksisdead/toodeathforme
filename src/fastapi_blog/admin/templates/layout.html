@@ -209,10 +209,11 @@ body,
         
         console.log('[Theme Switcher] Initializing...');
         
-        const navContainers = document.querySelectorAll('.navbar-nav');
+        // Only add to header navbar (desktop), not sidebar
+        const navContainers = document.querySelectorAll('header .navbar-nav');
         
         if (navContainers.length === 0) {
-            console.error('[Theme Switcher] Could not find any navbar elements');
+            console.error('[Theme Switcher] Could not find header navbar elements');
             return;
         }
         
