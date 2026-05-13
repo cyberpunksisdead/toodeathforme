@@ -140,6 +140,28 @@ body,
     height: 1.2rem;
     margin-right: 0.25rem;
 }
+
+/* Style user menu like language switcher (as button) */
+.navbar-nav .nav-item.dropdown > a.nav-link[data-bs-toggle="dropdown"] {
+    display: inline-block;
+    padding: 0.375rem 0.75rem;
+    font-size: 0.875rem;
+    line-height: 1.4285714286;
+    color: var(--tblr-body-color);
+    background-color: transparent;
+    border: 1px solid transparent;
+    border-radius: var(--tblr-border-radius);
+    transition: var(--theme-transition) !important;
+}
+
+.navbar-nav .nav-item.dropdown > a.nav-link[data-bs-toggle="dropdown"]:hover {
+    background-color: rgba(var(--tblr-primary-rgb), 0.1);
+}
+
+/* Make avatar in user menu match button style */
+.navbar-nav .nav-item.dropdown > a.nav-link .avatar {
+    margin-right: 0.5rem;
+}
 </style>
 
 <script>
