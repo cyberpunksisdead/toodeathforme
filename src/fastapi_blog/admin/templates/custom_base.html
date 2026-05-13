@@ -225,11 +225,26 @@ body,
         // Add theme switcher buttons to navbar
         console.log('[Theme Switcher] Initializing...');
         
-        // Only add to first header navbar (desktop), not sidebar
-        const navContainer = document.querySelector('header .navbar-nav');
+        // Find navbar - try header first, then any navbar that's not in aside (sidebar)
+        let navContainer = document.querySelector('header .navbar-nav');
         
         if (!navContainer) {
-            console.error('[Theme Switcher] Could not find header navbar element');
+            console.log('[Theme Switcher] No header navbar found, trying alternative selector');
+            // Try to find navbar not in sidebar
+            const allNavs = document.querySelectorAll('.navbar-nav');
+            console.log('[Theme Switcher] Found', allNavs.length, 'total navbars');
+            for (const nav of allNavs) {
+                // Skip if it's inside aside (sidebar)
+                if (!nav.closest('aside')) {
+                    navContainer = nav;
+                    console.log('[Theme Switcher] Using navbar:', nav);
+                    break;
+                }
+            }
+        }
+        
+        if (!navContainer) {
+            console.error('[Theme Switcher] Could not find suitable navbar element');
             console.log('[Theme Switcher] Available elements:');
             console.log('  - nav elements:', document.querySelectorAll('nav'));
             console.log('  - navbar elements:', document.querySelectorAll('.navbar'));
