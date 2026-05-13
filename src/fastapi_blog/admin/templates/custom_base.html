@@ -148,14 +148,16 @@ body,
     font-size: 0.875rem;
     line-height: 1.4285714286;
     color: var(--tblr-body-color);
-    background-color: transparent;
-    border: 1px solid transparent;
+    background-color: var(--tblr-btn-bg, #fff);
+    border: 1px solid var(--tblr-border-color-translucent, rgba(98, 105, 118, 0.16));
     border-radius: var(--tblr-border-radius);
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
     transition: var(--theme-transition) !important;
 }
 
 .navbar-nav .nav-item.dropdown > a.nav-link[data-bs-toggle="dropdown"]:hover {
-    background-color: rgba(var(--tblr-primary-rgb), 0.1);
+    background-color: var(--tblr-btn-hover-bg, #f8f9fa);
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
 }
 
 /* Make avatar in user menu match button style */
