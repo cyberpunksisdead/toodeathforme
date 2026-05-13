@@ -48,6 +48,16 @@
 
 ### New Features
 
+* **Theme Switcher**: Added dark/light/auto theme support [#feature]
+  - Light theme (default Tabler UI)
+  - Dark theme with optimized color palette for reduced eye strain
+  - Auto theme (follows system `prefers-color-scheme`)
+  - Theme switcher button in navbar (cycles through themes)
+  - Preference saved in browser localStorage
+  - Instant theme switching without page reload
+  - Fully accessible and keyboard-friendly
+  - See `docs/THEME_SWITCHER.md` for details
+
 * **RBAC (Role-Based Access Control)**: Advanced permission system [#feature]
   - Added `RoleBasedAuthProvider` for role-based permissions
   - Support for multiple roles: admin, editor, viewer
