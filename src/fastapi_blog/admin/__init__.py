@@ -68,12 +68,13 @@ _load_custom_translations()
 
 # Set a default locale context for lazy_gettext evaluation during import
 # This will be used when view class attributes are defined
-import starlette_admin.i18n
+import starlette_admin.i18n  # noqa: E402
+
 
 starlette_admin.i18n.set_locale("en")  # Default to English, will be overridden per request
 
 # Import views after translations are loaded and locale is set
-from .views import HomeView, PostModelView, UserModelView
+from .views import HomeView, PostModelView, UserModelView  # noqa: E402
 
 
 # File-based views removed - using CustomView instead
@@ -257,7 +258,7 @@ def add_admin_to_app(
 
     # Create admin instance
     # Set locale context to default locale for translation
-    from starlette_admin.i18n import set_locale, gettext
+    from starlette_admin.i18n import gettext, set_locale
 
     set_locale(i18n_default_locale)
 
