@@ -222,9 +222,9 @@ body,
             console.log('[Theme Switcher] Adding to container', index, ':', navContainer);
             
             const themeSwitcher = document.createElement('div');
-            themeSwitcher.className = 'nav-item dropdown';
+            themeSwitcher.className = 'nav-item';
             themeSwitcher.innerHTML = `
-                <button type="button" class="btn dropdown-toggle theme-switcher" data-bs-toggle="dropdown">
+                <button type="button" class="btn theme-switcher" title="Toggle theme (Light/Dark/Auto)">
                     <svg xmlns="http://www.w3.org/2000/svg" class="icon" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
                         <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
                         <path d="M3 5a1 1 0 0 1 1 -1h16a1 1 0 0 1 1 1v10a1 1 0 0 1 -1 1h-16a1 1 0 0 1 -1 -1v-10z" />
@@ -234,26 +234,24 @@ body,
                     </svg>
                     <span class="theme-text">Auto</span>
                 </button>
-                <div class="dropdown-menu dropdown-menu-end dropdown-menu-arrow">
-                    <a href="#" class="dropdown-item theme-option" data-theme="light">Light</a>
-                    <a href="#" class="dropdown-item theme-option" data-theme="dark">Dark</a>
-                    <a href="#" class="dropdown-item theme-option" data-theme="auto">Auto</a>
-                </div>
             `;
             
             navContainer.insertBefore(themeSwitcher, navContainer.firstChild);
             
-            const options = themeSwitcher.querySelectorAll('.theme-option');
-            options.forEach(function(option) {
-                option.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    const selectedTheme = this.getAttribute('data-theme');
-                    setStoredTheme(selectedTheme);
-                    const actualTheme = selectedTheme === 'auto' ? getPreferredTheme() : selectedTheme;
+            const button = themeSwitcher.querySelector('.theme-switcher');
+            if (button) {
+                button.addEventListener('click', function() {
+                    const themes = ['light', 'dark', 'auto'];
+                    const currentTheme = getStoredTheme();
+                    const currentIndex = themes.indexOf(currentTheme);
+                    const nextTheme = themes[(currentIndex + 1) % themes.length];
+                    
+                    setStoredTheme(nextTheme);
+                    const actualTheme = nextTheme === 'auto' ? getPreferredTheme() : nextTheme;
                     setTheme(actualTheme);
-                    updateThemeIcon(selectedTheme);
+                    updateThemeIcon(nextTheme);
                 });
-            });
+            }
         });
         
         console.log('[Theme Switcher] Added to all navbars');
