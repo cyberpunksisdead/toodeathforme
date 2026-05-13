@@ -148,13 +148,6 @@
     window.addEventListener('DOMContentLoaded', function() {
         const theme = getPreferredTheme();
         setTheme(theme);
-        updateThemeIcon(getStoredTheme());
-        
-        // Add click handler to theme switcher
-        const switcher = document.querySelector('.theme-switcher');
-        if (switcher) {
-            switcher.addEventListener('click', cycleTheme);
-        }
         
         // Listen for system theme changes when in auto mode
         window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function(e) {
@@ -220,9 +213,18 @@ document.addEventListener('DOMContentLoaded', function() {
             </button>
         `;
         navContainer.appendChild(themeSwitcher);
+        
+        // Add click handler to the button we just created
+        const button = themeSwitcher.querySelector('.theme-switcher');
+        if (button) {
+            button.addEventListener('click', cycleTheme);
+        }
     });
     
     console.log('[Theme Switcher] Added to all navbars');
+    
+    // Update all theme switcher icons to show current theme
+    updateThemeIcon(getStoredTheme());
 });
 </script>
 {% endblock %}
