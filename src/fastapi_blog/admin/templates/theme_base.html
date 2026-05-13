@@ -159,76 +159,78 @@
                 setTheme(e.matches ? 'dark' : 'light');
             }
         });
+        
+        // Add theme switcher buttons to navbar
+        console.log('[Theme Switcher] Initializing...');
+        
+        // Find all navbar-nav elements (mobile and desktop)
+        const navContainers = document.querySelectorAll('.navbar-nav');
+        
+        if (navContainers.length === 0) {
+            console.error('[Theme Switcher] Could not find any navbar elements');
+            console.log('[Theme Switcher] Available elements:');
+            console.log('  - nav elements:', document.querySelectorAll('nav'));
+            console.log('  - navbar elements:', document.querySelectorAll('.navbar'));
+            console.log('  - header elements:', document.querySelectorAll('header'));
+            
+            // Fallback: add to body as a floating button
+            const floatingButton = document.createElement('div');
+            floatingButton.style.cssText = 'position: fixed; top: 20px; right: 20px; z-index: 9999;';
+            floatingButton.innerHTML = `
+                <button class="theme-switcher btn btn-primary" title="Toggle theme (Light/Dark/Auto)" style="border-radius: 50%; width: 50px; height: 50px; padding: 0;">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                        <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                        <path d="M3 5a1 1 0 0 1 1 -1h16a1 1 0 0 1 1 1v10a1 1 0 0 1 -1 1h-16a1 1 0 0 1 -1 -1v-10z" />
+                        <path d="M7 20h10" />
+                        <path d="M9 16v4" />
+                        <path d="M15 16v4" />
+                    </svg>
+                </button>
+            `;
+            document.body.appendChild(floatingButton);
+            const floatingBtn = floatingButton.querySelector('.theme-switcher');
+            if (floatingBtn) {
+                floatingBtn.addEventListener('click', cycleTheme);
+            }
+            console.log('[Theme Switcher] Added as floating button');
+            return;
+        }
+        
+        console.log('[Theme Switcher] Found', navContainers.length, 'navbar containers');
+        
+        // Add theme switcher to each navbar
+        navContainers.forEach(function(navContainer, index) {
+            console.log('[Theme Switcher] Adding to container', index, ':', navContainer);
+            
+            // Create theme switcher element
+            const themeSwitcher = document.createElement('div');
+            themeSwitcher.className = 'nav-item';
+            themeSwitcher.innerHTML = `
+                <button class="theme-switcher nav-link" title="Toggle theme (Light/Dark/Auto)">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                        <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                        <path d="M3 5a1 1 0 0 1 1 -1h16a1 1 0 0 1 1 1v10a1 1 0 0 1 -1 1h-16a1 1 0 0 1 -1 -1v-10z" />
+                        <path d="M7 20h10" />
+                        <path d="M9 16v4" />
+                        <path d="M15 16v4" />
+                    </svg>
+                    <span class="theme-text d-none d-sm-inline">Auto</span>
+                </button>
+            `;
+            navContainer.appendChild(themeSwitcher);
+            
+            // Add click handler to the button we just created
+            const button = themeSwitcher.querySelector('.theme-switcher');
+            if (button) {
+                button.addEventListener('click', cycleTheme);
+            }
+        });
+        
+        console.log('[Theme Switcher] Added to all navbars');
+        
+        // Update all theme switcher icons to show current theme
+        updateThemeIcon(getStoredTheme());
     });
 })();
-
-// Add theme switcher to navbar after page loads
-document.addEventListener('DOMContentLoaded', function() {
-    console.log('[Theme Switcher] Initializing...');
-    
-    // Find all navbar-nav elements (mobile and desktop)
-    const navContainers = document.querySelectorAll('.navbar-nav');
-    
-    if (navContainers.length === 0) {
-        console.error('[Theme Switcher] Could not find any navbar elements');
-        console.log('[Theme Switcher] Available elements:');
-        console.log('  - nav elements:', document.querySelectorAll('nav'));
-        console.log('  - navbar elements:', document.querySelectorAll('.navbar'));
-        console.log('  - header elements:', document.querySelectorAll('header'));
-        
-        // Fallback: add to body as a floating button
-        const floatingButton = document.createElement('div');
-        floatingButton.style.cssText = 'position: fixed; top: 20px; right: 20px; z-index: 9999;';
-        floatingButton.innerHTML = `
-            <button class="theme-switcher btn btn-primary" title="Toggle theme (Light/Dark/Auto)" style="border-radius: 50%; width: 50px; height: 50px; padding: 0;">
-                <svg xmlns="http://www.w3.org/2000/svg" class="icon" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                    <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
-                    <path d="M3 5a1 1 0 0 1 1 -1h16a1 1 0 0 1 1 1v10a1 1 0 0 1 -1 1h-16a1 1 0 0 1 -1 -1v-10z" />
-                    <path d="M7 20h10" />
-                    <path d="M9 16v4" />
-                    <path d="M15 16v4" />
-                </svg>
-            </button>
-        `;
-        document.body.appendChild(floatingButton);
-        console.log('[Theme Switcher] Added as floating button');
-        return;
-    }
-    
-    console.log('[Theme Switcher] Found', navContainers.length, 'navbar containers');
-    
-    // Add theme switcher to each navbar
-    navContainers.forEach(function(navContainer, index) {
-        console.log('[Theme Switcher] Adding to container', index, ':', navContainer);
-        
-        // Create theme switcher element
-        const themeSwitcher = document.createElement('div');
-        themeSwitcher.className = 'nav-item';
-        themeSwitcher.innerHTML = `
-            <button class="theme-switcher nav-link" title="Toggle theme (Light/Dark/Auto)">
-                <svg xmlns="http://www.w3.org/2000/svg" class="icon" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                    <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
-                    <path d="M3 5a1 1 0 0 1 1 -1h16a1 1 0 0 1 1 1v10a1 1 0 0 1 -1 1h-16a1 1 0 0 1 -1 -1v-10z" />
-                    <path d="M7 20h10" />
-                    <path d="M9 16v4" />
-                    <path d="M15 16v4" />
-                </svg>
-                <span class="theme-text d-none d-sm-inline">Auto</span>
-            </button>
-        `;
-        navContainer.appendChild(themeSwitcher);
-        
-        // Add click handler to the button we just created
-        const button = themeSwitcher.querySelector('.theme-switcher');
-        if (button) {
-            button.addEventListener('click', cycleTheme);
-        }
-    });
-    
-    console.log('[Theme Switcher] Added to all navbars');
-    
-    // Update all theme switcher icons to show current theme
-    updateThemeIcon(getStoredTheme());
-});
 </script>
 {% endblock %}
