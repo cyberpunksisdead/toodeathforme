@@ -71,7 +71,7 @@ async def root():
             "note": "⚠️ Change these credentials in production!",
         },
         "first_steps": [
-            "1. Go to /dashboard and login",
+            "1. Go to /admin and login",
             "2. Create your first blog post",
             "3. View it at /blog",
         ],

@@ -141,7 +141,7 @@
                                     </div>
                                 </div>
                                 <div class="ms-3">
-                                    <a href="{{ url_for(__name__ ~ ':detail', identity='markdown-post', pk=post.slug) }}" class="btn btn-sm btn-outline-primary">
+                                    <a href="{{ url_for(__name__ ~ ':posts:edit', slug=post.slug) }}" class="btn btn-sm btn-outline-primary">
                                         <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
                                            <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
                                            <circle cx="12" cy="12" r="2"></circle>
@@ -164,7 +164,7 @@
                             Create your first blog post to get started
                         </p>
                         <div class="empty-action">
-                            <a href="{{ url_for(__name__ ~ ':create', identity='markdown-post') }}" class="btn btn-primary">
+                            <a href="{{ url_for(__name__ ~ ':posts:new') }}" class="btn btn-primary">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>
                                 Create Post
                             </a>
@@ -245,11 +245,11 @@
                         </div>
                         <div class="card-body">
                             <div class="d-grid gap-2">
-                                <a href="{{ url_for(__name__ ~ ':create', identity='markdown-post') }}" class="btn btn-primary">
+                                <a href="{{ url_for(__name__ ~ ':posts:new') }}" class="btn btn-primary">
                                     <svg xmlns="http://www.w3.org/2000/svg" class="icon me-2" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>
                                     New Post
                                 </a>
-                                <a href="{{ url_for(__name__ ~ ':list', identity='markdown-post') }}" class="btn btn-outline-primary">
+                                <a href="{{ url_for(__name__ ~ ':posts:list') }}" class="btn btn-outline-primary">
                                     <svg xmlns="http://www.w3.org/2000/svg" class="icon me-2" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><line x1="9" y1="6" x2="20" y2="6" /><line x1="9" y1="12" x2="20" y2="12" /><line x1="9" y1="18" x2="20" y2="18" /><line x1="5" y1="6" x2="5" y2="6.01" /><line x1="5" y1="12" x2="5" y2="12.01" /><line x1="5" y1="18" x2="5" y2="18.01" /></svg>
                                     All Posts
                                 </a>
