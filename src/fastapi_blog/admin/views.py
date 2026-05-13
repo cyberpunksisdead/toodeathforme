@@ -7,6 +7,7 @@ from starlette.responses import Response
 from starlette.templating import Jinja2Templates
 from starlette_admin import CustomView
 from starlette_admin.contrib.sqla import ModelView
+from starlette_admin.i18n import lazy_gettext as _
 
 
 # Lazy import to avoid initialization errors
@@ -73,6 +74,11 @@ def validate_and_prepare_password(password: str) -> str:
 class UserModelView(ModelView):
     """Custom view for User model with password hashing."""
 
+    # Localization labels
+    label = _("User")
+    name = "User"
+    label_plural = _("Users")
+
     exclude_fields_from_list = ["hashed_password"]
     exclude_fields_from_detail = ["hashed_password"]
     exclude_fields_from_edit = ["hashed_password", "created_at", "updated_at"]
@@ -105,6 +111,11 @@ class UserModelView(ModelView):
 
 class PostModelView(ModelView):
     """Custom view for Post model."""
+
+    # Localization labels
+    label = _("Post")
+    name = "Post"
+    label_plural = _("Posts")
 
     exclude_fields_from_edit = ["created_at", "updated_at"]
     exclude_fields_from_create = ["created_at", "updated_at"]

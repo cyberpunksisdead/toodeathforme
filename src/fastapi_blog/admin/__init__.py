@@ -20,6 +20,13 @@ from .fields import MarkdownField, SlugField, TagsField
 from .models import Post, User
 from .views import HomeView, PostModelView, UserModelView
 
+try:
+    from starlette_admin.i18n import lazy_gettext as _
+except ImportError:
+    # Fallback if i18n is not available
+    def _(message: str) -> str:
+        return message
+
 
 # File-based views removed - using CustomView instead
 
@@ -200,6 +207,11 @@ def add_admin_to_app(
         )
 
     # Create admin instance
+    # Determine labels based on default locale
+    home_label = "Главная" if i18n_default_locale == "ru" else "Home"
+    users_label = "Пользователи" if i18n_default_locale == "ru" else "Users"
+    posts_label = "Посты" if i18n_default_locale == "ru" else "Posts"
+
     admin = Admin(
         engine,
         title=title,
@@ -208,11 +220,14 @@ def add_admin_to_app(
         templates_dir=templates_dir,
         i18n_config=i18n_config,
         debug=os.getenv("DEBUG", "false").lower() == "true",
-        index_view=HomeView(label="Home", icon="fa fa-home"),
+        index_view=HomeView(label=home_label, icon="fa fa-home"),
     )
 
     # Add model views
-    admin.add_view(UserModelView(User, icon="fa fa-users"))
+    user_view = UserModelView(User, icon="fa fa-users")
+    user_view.label = users_label
+    user_view.label_plural = users_label
+    admin.add_view(user_view)
 
     # Add markdown CRUD views
     from .markdown_crud import (
@@ -225,7 +240,9 @@ def add_admin_to_app(
     posts_dir = get_posts_directory()
 
     # Add list view (shows in menu)
-    admin.add_view(MarkdownListView(posts_dir=posts_dir))
+    posts_list_view = MarkdownListView(posts_dir=posts_dir)
+    posts_list_view.label = posts_label
+    admin.add_view(posts_list_view)
 
     # Add edit and create views (don't show in menu)
     admin.add_view(MarkdownEditView(posts_dir=posts_dir))

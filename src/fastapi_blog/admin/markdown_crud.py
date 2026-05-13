@@ -11,6 +11,13 @@ from starlette.responses import Response
 from starlette.templating import Jinja2Templates
 from starlette_admin.views import CustomView
 
+try:
+    from starlette_admin.i18n import lazy_gettext as _
+except ImportError:
+    # Fallback if i18n is not available
+    def _(message: str) -> str:
+        return message
+
 
 def get_posts_directory() -> str:
     """Get posts directory from environment or default location.
@@ -127,7 +134,7 @@ class MarkdownListView(CustomView):
     def __init__(self, posts_dir: str = "posts"):
         """Initialize list view with posts directory."""
         super().__init__(
-            label="Posts",
+            label=_("Posts"),
             icon="fa fa-file-text",
             path="/posts/list",
             template_path="markdown_list.html",
@@ -180,7 +187,7 @@ class MarkdownEditView(CustomView):
     def __init__(self, posts_dir: str = "posts"):
         """Initialize edit view with posts directory."""
         super().__init__(
-            label="Edit Post",
+            label=_("Edit Post"),
             path="/posts/edit/{slug}",
             template_path="markdown_edit.html",
             name="posts:edit",
@@ -233,7 +240,7 @@ class MarkdownCreateView(CustomView):
     def __init__(self, posts_dir: str = "posts"):
         """Initialize create view with posts directory."""
         super().__init__(
-            label="New Post",
+            label=_("New Post"),
             path="/posts/new",
             template_path="markdown_edit.html",
             name="posts:new",
