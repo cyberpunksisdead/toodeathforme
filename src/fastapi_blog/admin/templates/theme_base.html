@@ -5,20 +5,31 @@
 <style>
 /* Theme transition configuration */
 :root {
-    --theme-transition-duration: 0.3s;
-    --theme-transition-timing: ease;
+    --theme-transition-duration: 0.25s;
+    --theme-transition-timing: ease-out;
     --theme-transition: 
         background-color var(--theme-transition-duration) var(--theme-transition-timing),
         color var(--theme-transition-duration) var(--theme-transition-timing),
-        border-color var(--theme-transition-duration) var(--theme-transition-timing),
-        box-shadow var(--theme-transition-duration) var(--theme-transition-timing);
+        border-color var(--theme-transition-duration) var(--theme-transition-timing);
 }
 
-/* Apply smooth transitions globally for theme changes (body only) */
+/* Apply smooth transitions only to key UI elements for better performance */
 body,
-body *,
-body *::before,
-body *::after {
+.page,
+.page-wrapper,
+.page-body,
+.card,
+.navbar,
+.navbar-nav,
+.nav-link,
+.table,
+.form-control,
+.form-select,
+.btn,
+.dropdown-menu,
+.list-group-item,
+.badge,
+.alert {
     transition: var(--theme-transition);
 }
 
@@ -29,9 +40,21 @@ body *::after {
     }
     
     body,
-    body *,
-    body *::before,
-    body *::after {
+    .page,
+    .page-wrapper,
+    .page-body,
+    .card,
+    .navbar,
+    .navbar-nav,
+    .nav-link,
+    .table,
+    .form-control,
+    .form-select,
+    .btn,
+    .dropdown-menu,
+    .list-group-item,
+    .badge,
+    .alert {
         transition: none !important;
     }
 }
