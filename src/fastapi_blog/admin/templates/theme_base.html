@@ -54,12 +54,11 @@
 
 /* Theme switcher button styles */
 .theme-switcher {
-    display: inline-flex;
+    display: inline-flex !important;
     align-items: center;
     gap: 0.5rem;
-    padding: 0.375rem 0.75rem;
-    border: 1px solid var(--tblr-border-color);
-    border-radius: 0.25rem;
+    padding: 0.5rem 0.75rem;
+    border: none;
     background: transparent;
     color: inherit;
     cursor: pointer;
@@ -75,8 +74,9 @@
 }
 
 .theme-switcher .icon {
-    width: 1rem;
-    height: 1rem;
+    width: 1.2rem;
+    height: 1.2rem;
+    margin-right: 0.25rem;
 }
 </style>
 
@@ -86,7 +86,7 @@
     const THEME_KEY = 'admin-theme';
     
     function getStoredTheme() {
-        return localStorage.getItem(THEME_KEY) || 'auto';
+        return localStorage.getItem(THEME_KEY) || 'auto';  // Default: auto (system theme)
     }
     
     function setStoredTheme(theme) {
@@ -126,8 +126,10 @@
             }
         };
         
-        icon.innerHTML = themes[currentTheme].icon;
-        text.textContent = themes[currentTheme].text;
+        if (icon && text) {
+            icon.innerHTML = themes[currentTheme].icon;
+            text.textContent = themes[currentTheme].text;
+        }
     }
     
     function cycleTheme() {
@@ -165,15 +167,31 @@
 </script>
 {% endblock %}
 
-{% block navbar_right %}
+{% block extra_js %}
 {{ super() }}
-<!-- Theme Switcher -->
-<button class="theme-switcher ms-2" title="Toggle theme (Light/Dark/Auto)">
-    <svg xmlns="http://www.w3.org/2000/svg" class="icon" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-        <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
-        <circle cx="12" cy="12" r="4"/>
-        <path d="M3 12h1m8 -9v1m8 8h1m-9 8v1m-6.4 -15.4l.7 .7m12.1 -.7l-.7 .7m0 11.4l.7 .7m-12.1 -.7l-.7 .7" />
-    </svg>
-    <span class="theme-text">Light</span>
-</button>
+<script>
+// Add theme switcher to navbar after page loads
+document.addEventListener('DOMContentLoaded', function() {
+    // Find the navbar actions area
+    const navbar = document.querySelector('.navbar-nav');
+    if (navbar) {
+        // Create theme switcher element
+        const themeSwitcher = document.createElement('li');
+        themeSwitcher.className = 'nav-item';
+        themeSwitcher.innerHTML = `
+            <button class="theme-switcher nav-link" title="Toggle theme (Light/Dark/Auto)">
+                <svg xmlns="http://www.w3.org/2000/svg" class="icon" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                    <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                    <path d="M3 5a1 1 0 0 1 1 -1h16a1 1 0 0 1 1 1v10a1 1 0 0 1 -1 1h-16a1 1 0 0 1 -1 -1v-10z" />
+                    <path d="M7 20h10" />
+                    <path d="M9 16v4" />
+                    <path d="M15 16v4" />
+                </svg>
+                <span class="theme-text">Auto</span>
+            </button>
+        `;
+        navbar.appendChild(themeSwitcher);
+    }
+});
+</script>
 {% endblock %}
