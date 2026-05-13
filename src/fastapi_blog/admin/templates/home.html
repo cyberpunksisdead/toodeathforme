@@ -11,15 +11,15 @@
                    <path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2 -2v-7"></path>
                    <path d="M9 21v-6a2 2 0 0 1 2 -2h2a2 2 0 0 1 2 2v6"></path>
                 </svg>
-                Home
+                {{ t.home }}
             </h2>
         </div>
     </div>
     <ol class="breadcrumb">
         <li class="breadcrumb-item">
-            <a href="{{ url_for(__name__ ~ ':index')}}">Admin</a>
+            <a href="{{ url_for(__name__ ~ ':index')}}">{{ t.admin }}</a>
         </li>
-        <li class="breadcrumb-item active">Home</li>
+        <li class="breadcrumb-item active">{{ t.home }}</li>
     </ol>
 </div>
 {% endblock %}
@@ -32,10 +32,10 @@
             <div class="card">
                 <div class="card-body">
                     <div class="d-flex align-items-center">
-                        <div class="subheader">Total Posts</div>
+                        <div class="subheader">{{ t.total_posts }}</div>
                     </div>
                     <div class="h1 mb-0">{{ stats.total_posts }}</div>
-                    <div class="text-muted">All posts in the system</div>
+                    <div class="text-muted">{{ t.all_posts_in_system }}</div>
                 </div>
             </div>
         </div>
@@ -43,10 +43,10 @@
             <div class="card">
                 <div class="card-body">
                     <div class="d-flex align-items-center">
-                        <div class="subheader">Published</div>
+                        <div class="subheader">{{ t.published }}</div>
                     </div>
                     <div class="h1 mb-0 text-success">{{ stats.published_posts }}</div>
-                    <div class="text-muted">Live on the blog</div>
+                    <div class="text-muted">{{ t.live_on_blog }}</div>
                 </div>
             </div>
         </div>
@@ -54,10 +54,10 @@
             <div class="card">
                 <div class="card-body">
                     <div class="d-flex align-items-center">
-                        <div class="subheader">Drafts</div>
+                        <div class="subheader">{{ t.drafts }}</div>
                     </div>
                     <div class="h1 mb-0 text-warning">{{ stats.draft_posts }}</div>
-                    <div class="text-muted">Not yet published</div>
+                    <div class="text-muted">{{ t.not_yet_published }}</div>
                 </div>
             </div>
         </div>
@@ -65,10 +65,10 @@
             <div class="card">
                 <div class="card-body">
                     <div class="d-flex align-items-center">
-                        <div class="subheader">Total Tags</div>
+                        <div class="subheader">{{ t.total_tags }}</div>
                     </div>
                     <div class="h1 mb-0">{{ stats.total_tags }}</div>
-                    <div class="text-muted">Unique categories</div>
+                    <div class="text-muted">{{ t.unique_categories }}</div>
                 </div>
             </div>
         </div>
@@ -88,7 +88,7 @@
                            <line x1="9" y1="13" x2="15" y2="13"></line>
                            <line x1="9" y1="17" x2="15" y2="17"></line>
                         </svg>
-                        Latest Posts
+                        {{ t.latest_posts }}
                     </h3>
                 </div>
                 <div class="card-body p-0">
@@ -101,9 +101,9 @@
                                     <div class="d-flex flex-column">
                                         <h4 class="mb-1">
                                             {% if post.published %}
-                                            <span class="badge bg-success-lt me-2">Published</span>
+                                            <span class="badge bg-success-lt me-2">{{ t.published }}</span>
                                             {% else %}
-                                            <span class="badge bg-warning-lt me-2">Draft</span>
+                                            <span class="badge bg-warning-lt me-2">{{ t.drafts }}</span>
                                             {% endif %}
                                             {{ post.title }}
                                         </h4>
@@ -147,7 +147,7 @@
                                            <circle cx="12" cy="12" r="2"></circle>
                                            <path d="M22 12c-2.667 4.667 -6 7 -10 7s-7.333 -2.333 -10 -7c2.667 -4.667 6 -7 10 -7s7.333 2.333 10 7"></path>
                                         </svg>
-                                        View
+                                        {{ t.view }}
                                     </a>
                                 </div>
                             </div>
@@ -159,14 +159,14 @@
                         <div class="empty-icon">
                             <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>
                         </div>
-                        <p class="empty-title">No posts yet</p>
+                        <p class="empty-title">{{ t.no_posts_yet }}</p>
                         <p class="empty-subtitle text-muted">
-                            Create your first blog post to get started
+                            {{ t.create_first_post }}
                         </p>
                         <div class="empty-action">
                             <a href="{{ url_for(__name__ ~ ':posts:new') }}" class="btn btn-primary">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>
-                                Create Post
+                                {{ t.create_post }}
                             </a>
                         </div>
                     </div>
@@ -189,7 +189,7 @@
                                    <path d="M17.573 18.407l2.834 -2.834a2.025 2.025 0 0 0 0 -2.864l-7.117 -7.116"></path>
                                    <path d="M6 9h-.01"></path>
                                 </svg>
-                                Top Tags
+                                {{ t.top_tags }}
                             </h3>
                         </div>
                         <div class="card-body">
@@ -199,13 +199,13 @@
                                 <div class="list-group-item">
                                     <div class="d-flex justify-content-between align-items-center">
                                         <span class="badge bg-blue-lt">{{ tag }}</span>
-                                        <span class="text-muted">{{ count }} post{{ 's' if count != 1 else '' }}</span>
+                                        <span class="text-muted">{{ count }} {{ t.post if count == 1 else t.posts }}</span>
                                     </div>
                                 </div>
                                 {% endfor %}
                             </div>
                             {% else %}
-                            <p class="text-muted mb-0">No tags yet</p>
+                            <p class="text-muted mb-0">{{ t.no_tags_yet }}</p>
                             {% endif %}
                         </div>
                     </div>
@@ -225,13 +225,12 @@
                             </div>
                         </div>
                         <div class="card-body">
-                            <h3 class="card-title">FastAPI Blog Admin</h3>
+                            <h3 class="card-title">{{ t.fastapi_blog_admin }}</h3>
                             <p class="text-muted">
-                                This is a custom home page that displays your blog statistics,
-                                latest posts, and popular tags.
+                                {{ t.home_desc }}
                             </p>
                             <p class="text-muted mb-0">
-                                Navigate using the menu on the left to manage posts, users, and settings.
+                                {{ t.navigate_desc }}
                             </p>
                         </div>
                     </div>
@@ -241,21 +240,21 @@
                 <div class="col-12">
                     <div class="card">
                         <div class="card-header">
-                            <h3 class="card-title">Quick Actions</h3>
+                            <h3 class="card-title">{{ t.quick_actions }}</h3>
                         </div>
                         <div class="card-body">
                             <div class="d-grid gap-2">
                                 <a href="{{ url_for(__name__ ~ ':posts:new') }}" class="btn btn-primary">
                                     <svg xmlns="http://www.w3.org/2000/svg" class="icon me-2" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>
-                                    New Post
+                                    {{ t.new_post }}
                                 </a>
                                 <a href="{{ url_for(__name__ ~ ':posts:list') }}" class="btn btn-outline-primary">
                                     <svg xmlns="http://www.w3.org/2000/svg" class="icon me-2" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><line x1="9" y1="6" x2="20" y2="6" /><line x1="9" y1="12" x2="20" y2="12" /><line x1="9" y1="18" x2="20" y2="18" /><line x1="5" y1="6" x2="5" y2="6.01" /><line x1="5" y1="12" x2="5" y2="12.01" /><line x1="5" y1="18" x2="5" y2="18.01" /></svg>
-                                    All Posts
+                                    {{ t.all_posts }}
                                 </a>
                                 <a href="{{ url_for(__name__ ~ ':list', identity='user') }}" class="btn btn-outline-primary">
                                     <svg xmlns="http://www.w3.org/2000/svg" class="icon me-2" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><circle cx="12" cy="7" r="4" /><path d="M6 21v-2a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v2" /></svg>
-                                    Users
+                                    {{ t.users }}
                                 </a>
                             </div>
                         </div>
