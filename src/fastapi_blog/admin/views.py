@@ -189,8 +189,9 @@ class HomeView(CustomView):
 
         # Get current locale for translations
         from starlette_admin.i18n import get_locale
+
         locale = get_locale()
-        
+
         # Translations dictionary
         translations = {
             "ru": {
@@ -250,7 +251,7 @@ class HomeView(CustomView):
                 "users": "Users",
             },
         }
-        
+
         # Get translations for current locale (default to English)
         t = translations.get(locale, translations["en"])
 
