@@ -71,7 +71,9 @@ _load_custom_translations()
 import starlette_admin.i18n  # noqa: E402
 
 
-starlette_admin.i18n.set_locale("en")  # Default to English, will be overridden per request
+starlette_admin.i18n.set_locale(
+    "en"
+)  # Default to English, will be overridden per request
 
 # Import views after translations are loaded and locale is set
 from .views import HomeView, PostModelView, UserModelView  # noqa: E402
