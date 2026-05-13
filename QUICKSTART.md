@@ -304,6 +304,7 @@ Supported out-of-the-box:
 
 For more detailed documentation, see:
 
+- **Database Guide**: [docs/DATABASE.md](docs/DATABASE.md) - Complete database architecture
 - **Russian Guide**: [docs/QUICKSTART.md](docs/QUICKSTART.md)
 - **Architecture**: [ARCHITECTURE_CONSOLIDATION_PLAN.md](ARCHITECTURE_CONSOLIDATION_PLAN.md)
 - **Progress**: [docs/ARCHITECTURE_CONSOLIDATION_PROGRESS.md](docs/ARCHITECTURE_CONSOLIDATION_PROGRESS.md)
