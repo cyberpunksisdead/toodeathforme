@@ -1,5 +1,81 @@
 # Changelog
 
+## 0.8.1 - 2026-05-13 (Unreleased)
+
+**Security and Stability Update**
+
+### Security Fixes
+
+* **Password Security Improvements**: Complete password security overhaul [#security]
+  - Fixed critical `lru_cache` bug by adding `maxsize` parameter to prevent memory leaks
+  - Added password hashing to admin user view using bcrypt
+  - Implemented password validation (8-128 chars) with bcrypt truncation handling
+  - Added clear error messages for password validation failures
+  - Fixed password hashing with lazy initialization to prevent startup issues
+
+* **Authentication Fixes**: Critical authentication improvements [#security]
+  - Fixed critical bug where `auth_func` was used before definition
+  - Fixed authentication type error and enforced security checks
+  - Fixed `optional_authentication` to handle missing session gracefully
+  - Improved admin authentication with comprehensive examples
+
+### Bug Fixes
+
+* **Admin Panel Fixes**: Various admin panel stability improvements [#bugfix]
+  - Fixed deprecated `on_event` causing CI failure (migrated to lifespan)
+  - Fixed `TemplateResponse` parameter order in `HomeView`
+  - Fixed timezone comparison in `MarkdownPost.list_all`
+  - Added error handling for `HomeView` post loading
+  - Fixed `HomeView` to configure posts directory correctly
+  - Fixed import path in `HomeView`
+
+* **CI/CD Fixes**: Complete CI/CD pipeline fixes [#ci]
+  - Fixed all ruff linting errors for CI compliance
+  - Fixed mypy type errors in admin module
+  - Used modern Python 3.12+ type syntax (`dict | None`)
+  - Fixed code formatting for ruff compliance
+  - Suppressed bandit warning for dev password
+
+### New Features
+
+* **RBAC (Role-Based Access Control)**: Advanced permission system [#feature]
+  - Added `RoleBasedAuthProvider` for role-based permissions
+  - Support for multiple roles: admin, editor, viewer
+  - Fine-grained access control per view and action
+
+* **Markdown Virtual Model**: File-based storage improvements [#feature]
+  - Added `MarkdownPost` virtual model for file-based storage
+  - Better integration between file-based posts and admin UI
+  - Improved post listing and filtering
+
+* **Custom Home Page**: Enhanced admin dashboard [#feature]
+  - Added custom home page with blog statistics
+  - Displays recent posts and key metrics
+  - Configurable posts directory
+
+### Improvements
+
+* **Admin Panel Configuration**: Better defaults and initialization [#improvement]
+  - Changed admin default URL from `/dashboard` to `/admin`
+  - Fixed admin initialization and added demo tools
+  - Added example blog posts for home page demo
+  - Added data directory to `.gitignore`
+
+### Documentation
+
+* **Comprehensive Documentation**: Major documentation improvements [#docs]
+  - Added comprehensive database documentation (`docs/DATABASE.md`)
+  - Clarified admin panel vs REST API architecture in README
+  - Added architecture consolidation plan documentation
+  - Added cache bug fix documentation
+  - Added password security fix documentation with UX improvements
+  - Added CI lint fixes documentation
+  - Added complete CI fix documentation
+  - Added mission accomplished summary
+  - Added CI debugging guide and next steps
+  - Added CI failure analysis documentation
+  - Fixed duplicate option numbering in README
+
 ## 0.8.0 - 2026-05-12
 
 **Architecture Consolidation Update**
