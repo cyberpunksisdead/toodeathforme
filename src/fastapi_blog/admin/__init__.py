@@ -266,8 +266,9 @@ def add_admin_to_app(
 
     # Get translated labels for the default locale
     home_label = gettext("Home")
-    user_label_singular = gettext("User")
     user_label_plural = gettext("Users")
+    # For button text, use genitive case (родительный падеж) for proper grammar
+    user_name_for_button = "пользователя" if i18n_default_locale == "ru" else "User"
     posts_label = gettext("Posts")
 
     admin = Admin(
@@ -284,8 +285,8 @@ def add_admin_to_app(
     # Add model views with translated labels
     # Override label and name to use translated values from default locale
     user_view = UserModelView(User, icon="fa fa-users")
-    user_view.label = user_label_singular
-    user_view.name = user_label_singular  # Used in "New %(name)s" button template
+    user_view.label = user_label_plural  # Use plural for page title
+    user_view.name = user_name_for_button  # Use genitive case for button
     user_view.label_plural = user_label_plural
     admin.add_view(user_view)
 
