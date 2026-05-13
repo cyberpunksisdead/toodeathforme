@@ -14,10 +14,11 @@
         box-shadow var(--theme-transition-duration) var(--theme-transition-timing);
 }
 
-/* Apply smooth transitions globally for theme changes */
-*,
-*::before,
-*::after {
+/* Apply smooth transitions globally for theme changes (body only) */
+body,
+body *,
+body *::before,
+body *::after {
     transition: var(--theme-transition);
 }
 
@@ -27,9 +28,10 @@
         --theme-transition-duration: 0s;
     }
     
-    *,
-    *::before,
-    *::after {
+    body,
+    body *,
+    body *::before,
+    body *::after {
         transition: none !important;
     }
 }
