@@ -7,6 +7,7 @@ Provides starlette-admin based administration interface with:
 """
 
 import os
+import warnings
 
 from fastapi import FastAPI
 from starlette.middleware.sessions import SessionMiddleware
@@ -34,6 +35,22 @@ __all__ = [
     "TagsField",
     "SlugField",
 ]
+
+
+def _has_session_middleware(app: FastAPI) -> bool:
+    """Check if SessionMiddleware is already added to the app.
+
+    Args:
+      app: FastAPI application instance
+
+    Returns:
+      True if SessionMiddleware is already added, False otherwise
+
+    """
+    for middleware in app.user_middleware:
+        if middleware.cls == SessionMiddleware:
+            return True
+    return False
 
 
 def add_admin_to_app(
@@ -112,7 +129,16 @@ def add_admin_to_app(
 
     # Add session middleware if needed (must be added AFTER CORS)
     if add_session_middleware:
-        app.add_middleware(SessionMiddleware, secret_key=secret_key)
+        if _has_session_middleware(app):
+            warnings.warn(
+                "SessionMiddleware is already added to the application. "
+                "Set add_session_middleware=False to avoid duplication. "
+                "Skipping duplicate middleware addition.",
+                UserWarning,
+                stacklevel=2,
+            )
+        else:
+            app.add_middleware(SessionMiddleware, secret_key=secret_key)
 
     # Create engine and session
     engine, session_factory = create_engine_and_session(database_url)

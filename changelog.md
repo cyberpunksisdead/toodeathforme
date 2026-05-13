@@ -29,6 +29,14 @@
   - Fixed `HomeView` to configure posts directory correctly
   - Fixed import path in `HomeView`
 
+* **Session Middleware Duplication**: Added automatic detection [#bugfix]
+  - Detects if `SessionMiddleware` is already added to the application
+  - Issues `UserWarning` with clear guidance if duplicate detected
+  - Skips duplicate addition automatically
+  - Backwards compatible with existing code
+  - Added helper function `_has_session_middleware()` for detection
+  - See `docs/SESSION_MIDDLEWARE_DUPLICATION_FIX.md` for details
+
 * **CI/CD Fixes**: Complete CI/CD pipeline fixes [#ci]
   - Fixed all ruff linting errors for CI compliance
   - Fixed mypy type errors in admin module
