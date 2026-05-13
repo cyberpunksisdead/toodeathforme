@@ -21,7 +21,7 @@ import sys  # noqa: I001
 
 # Clear any cached imports to ensure fresh load
 for mod in list(sys.modules.keys()):
-    if mod.startswith('fastapi_blog'):
+    if mod.startswith("fastapi_blog"):
         del sys.modules[mod]
 
 from pathlib import Path  # noqa: E402
