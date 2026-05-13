@@ -154,7 +154,10 @@ class MarkdownPost:
             frontmatter = {}
             body = content
 
-        # Extract known fields
+        # Extract known fields (remove from frontmatter to avoid conflicts)
+        # Remove slug from frontmatter if present (slug comes from filename)
+        frontmatter.pop("slug", None)
+        
         title = frontmatter.pop("title", slug.replace("-", " ").title())
         date_value = frontmatter.pop("date", None)
 
