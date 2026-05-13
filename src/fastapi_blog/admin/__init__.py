@@ -76,6 +76,7 @@ def _create_admin_for_locale(
     base_url: str,
     auth_provider,
     templates_dir: str,
+    available_locales: list[str],
 ) -> Admin:
     """Create an Admin instance for a specific locale.
 
@@ -86,6 +87,7 @@ def _create_admin_for_locale(
         base_url: Base URL for this admin instance
         auth_provider: Authentication provider instance
         templates_dir: Path to custom templates directory
+        available_locales: List of all available locales for language switcher
 
     Returns:
         Configured Admin instance
@@ -96,10 +98,10 @@ def _create_admin_for_locale(
     # Set locale for this admin instance
     set_locale(locale)
 
-    # Configure i18n - no language switcher (handled by separate admin instances)
+    # Configure i18n with language switcher if multiple locales available
     i18n_config = I18nConfig(
         default_locale=locale,
-        language_switcher=None,  # Disabled - we handle switching via URLs
+        language_switcher=available_locales if len(available_locales) > 1 else None,
     )
 
     # Get translated labels
@@ -357,6 +359,7 @@ def add_admin_to_app(
             base_url=f"/admin/{locale}",
             auth_provider=auth_provider,
             templates_dir=templates_dir,
+            available_locales=locales,
         )
 
         # Mount to app
