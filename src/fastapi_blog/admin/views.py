@@ -72,7 +72,7 @@ def validate_and_prepare_password(password: str) -> str:
 
 class UserModelView(ModelView):
     """Custom view for User model with password hashing.
-    
+
     Note: label, name, and label_plural are set dynamically per locale
     in add_admin_to_app() function.
     """
@@ -109,7 +109,7 @@ class UserModelView(ModelView):
 
 class PostModelView(ModelView):
     """Custom view for Post model.
-    
+
     Note: label, name, and label_plural are set dynamically per locale
     in add_admin_to_app() function.
     """

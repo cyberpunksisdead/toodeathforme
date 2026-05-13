@@ -78,7 +78,7 @@ def _create_admin_for_locale(
     templates_dir: str,
 ) -> Admin:
     """Create an Admin instance for a specific locale.
-    
+
     Args:
         locale: Language code (e.g. 'en', 'ru')
         engine: SQLAlchemy engine
@@ -86,31 +86,30 @@ def _create_admin_for_locale(
         base_url: Base URL for this admin instance
         auth_provider: Authentication provider instance
         templates_dir: Path to custom templates directory
-        
+
     Returns:
         Configured Admin instance
+
     """
-    from starlette_admin.i18n import I18nConfig, gettext, set_locale
+    from starlette_admin.i18n import gettext, set_locale
 
     # Set locale for this admin instance
     set_locale(locale)
-    
+
     # Configure i18n - no language switcher (handled by separate admin instances)
     i18n_config = I18nConfig(
         default_locale=locale,
         language_switcher=None,  # Disabled - we handle switching via URLs
     )
-    
+
     # Get translated labels
     home_label = gettext("Home")
     user_label_singular = gettext("User")
     user_label_plural = gettext("Users")
     # Use lowercase genitive case for Russian: "Добавить пользователя"
-    user_name_for_button = (
-        "пользователя" if locale == "ru" else user_label_singular
-    )
+    user_name_for_button = "пользователя" if locale == "ru" else user_label_singular
     posts_label = gettext("Posts")
-    
+
     # Create admin instance
     admin = Admin(
         engine,
@@ -122,14 +121,14 @@ def _create_admin_for_locale(
         debug=os.getenv("DEBUG", "false").lower() == "true",
         index_view=HomeView(label=home_label, icon="fa fa-home"),
     )
-    
+
     # Add User view with translated labels
     user_view = UserModelView(User, icon="fa fa-users")
     user_view.label = user_label_plural
     user_view.name = user_name_for_button
     user_view.label_plural = user_label_plural
     admin.add_view(user_view)
-    
+
     # Add markdown CRUD views
     from .markdown_crud import (
         MarkdownCreateView,
@@ -137,18 +136,18 @@ def _create_admin_for_locale(
         MarkdownListView,
         get_posts_directory,
     )
-    
+
     posts_dir = get_posts_directory()
-    
+
     # Add list view (shows in menu)
     posts_list_view = MarkdownListView(posts_dir=posts_dir)
     posts_list_view.label = posts_label
     admin.add_view(posts_list_view)
-    
+
     # Add edit and create views (don't show in menu)
     admin.add_view(MarkdownEditView(posts_dir=posts_dir))
     admin.add_view(MarkdownCreateView(posts_dir=posts_dir))
-    
+
     return admin
 
 
@@ -172,7 +171,7 @@ def add_admin_to_app(
     i18n_locales: list[str] | None = None,
 ) -> dict[str, Admin]:
     """Add starlette-admin panel to FastAPI application.
-    
+
     Creates separate admin instances for each locale at /admin/{locale}.
     /admin redirects to /admin/{default_locale}.
 
@@ -187,7 +186,7 @@ def add_admin_to_app(
       init_database: Whether to initialize database on startup (default: True)
       locales: List of available locales (default: ['en', 'ru'])
       default_locale: Default locale for /admin redirect (default: 'en')
-      
+
       # Deprecated parameters (for backward compatibility):
       base_url: Deprecated. Ignored in new multi-locale architecture.
       i18n_enabled: Deprecated. Multi-locale is always enabled.
@@ -200,8 +199,12 @@ def add_admin_to_app(
 
     Example:
       ```python
-      from fastapi import FastAPI
-      from fastapi_blog.admin import add_admin_to_app
+      from fastapi import (
+          FastAPI,
+      )
+      from fastapi_blog.admin import (
+          add_admin_to_app,
+      )
 
       app = FastAPI()
 
@@ -210,7 +213,10 @@ def add_admin_to_app(
           app,
           title="My Blog Admin",
           admin_password="SuperSecret123!",
-          locales=["en", "ru"],
+          locales=[
+              "en",
+              "ru",
+          ],
           default_locale="en",  # /admin → /admin/en
       )
 
@@ -218,7 +224,10 @@ def add_admin_to_app(
       admins = add_admin_to_app(
           app,
           title="Админ-панель блога",
-          locales=["en", "ru"],
+          locales=[
+              "en",
+              "ru",
+          ],
           default_locale="ru",  # /admin → /admin/ru
       )
       ```
@@ -235,7 +244,7 @@ def add_admin_to_app(
             locales = i18n_locales
         else:
             locales = ["en", "ru"]
-    
+
     if default_locale is None:
         if i18n_default_locale is not None:
             warnings.warn(
@@ -246,7 +255,7 @@ def add_admin_to_app(
             default_locale = i18n_default_locale
         else:
             default_locale = "en"
-    
+
     if base_url is not None:
         warnings.warn(
             "base_url parameter is deprecated and ignored. "
@@ -254,7 +263,7 @@ def add_admin_to_app(
             DeprecationWarning,
             stacklevel=2,
         )
-    
+
     if i18n_enabled is not None:
         warnings.warn(
             "i18n_enabled parameter is deprecated and ignored. "
@@ -262,13 +271,13 @@ def add_admin_to_app(
             DeprecationWarning,
             stacklevel=2,
         )
-    
+
     # Validate default_locale is in locales
     if default_locale not in locales:
         raise ValueError(
             f"default_locale '{default_locale}' must be in locales list {locales}"
         )
-    
+
     # Get secret key
     if secret_key is None:
         secret_key = os.getenv(
@@ -330,7 +339,7 @@ def add_admin_to_app(
 
     # Create admin instances for each locale
     admins = {}
-    
+
     for locale in locales:
         # Create auth provider for this locale
         # redirect_after_login will be set to /admin/{locale}/user/list
@@ -339,7 +348,7 @@ def add_admin_to_app(
             password=admin_password,
             redirect_after_login=f"/admin/{locale}/user/list",
         )
-        
+
         # Create admin instance for this locale
         admin = _create_admin_for_locale(
             locale=locale,
@@ -349,29 +358,29 @@ def add_admin_to_app(
             auth_provider=auth_provider,
             templates_dir=templates_dir,
         )
-        
+
         # Mount to app
         admin.mount_to(app)
         admins[locale] = admin
-        
+
         print(f"✓ Admin panel ({locale}) mounted at /admin/{locale}")
-    
+
     # Add redirect from /admin to /admin/{default_locale}
     from starlette.responses import RedirectResponse
-    
+
     @app.get("/admin")
     @app.get("/admin/")
     async def admin_redirect():
         return RedirectResponse(url=f"/admin/{default_locale}", status_code=307)
-    
+
     print(f"✓ /admin redirects to /admin/{default_locale}")
     print("✓ Markdown CRUD API available at /api/posts (authenticated)")
-    
+
     if init_database:
         print("✓ Database initialized")
     else:
         print("⚠ Database initialization disabled. Call init_db(engine) manually.")
-    
+
     print(f"✓ Login: username='{admin_username}' password='{admin_password}'")
     print(f"✓ Available locales: {', '.join(locales)}")
     print(f"✓ Access at: http://localhost:8000/admin/{default_locale}")

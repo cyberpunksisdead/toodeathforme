@@ -172,3 +172,37 @@ body,
 }
 </style>
 {% endblock %}
+
+
+{% block footer_js %}
+{{ super() }}
+<script>
+// Language switcher: redirect between /admin/{locale} URLs instead of cookie+reload
+$(document).ready(function() {
+    $('.language-switcher-item').off('click').on('click', function(e) {
+        e.preventDefault();
+        
+        const targetLocale = $(this).data('lang');
+        const currentPath = window.location.pathname;
+        
+        // Extract current locale from path: /admin/{locale}/...
+        const pathMatch = currentPath.match(/^\/admin\/([a-z]{2})(\/.*)?$/);
+        
+        if (pathMatch) {
+            const currentLocale = pathMatch[1];
+            const restOfPath = pathMatch[2] || '';
+            
+            // Replace current locale with target locale
+            const newPath = `/admin/${targetLocale}${restOfPath}`;
+            
+            // Preserve query string if any
+            const queryString = window.location.search;
+            window.location.href = newPath + queryString;
+        } else {
+            // Fallback: just go to /admin/{locale}
+            window.location.href = `/admin/${targetLocale}`;
+        }
+    });
+});
+</script>
+{% endblock %}
