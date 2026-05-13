@@ -49,6 +49,9 @@ admin = fastapi_blog.add_admin_to_app(
     admin_username="admin",
     admin_password="Admin123!",
     secret_key="change-me-in-production",
+    i18n_enabled=True,
+    i18n_default_locale="ru",
+    i18n_locales=["en", "ru"],
 )
 
 # Mount static files
