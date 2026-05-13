@@ -11,6 +11,7 @@ from starlette.responses import Response
 from starlette.templating import Jinja2Templates
 from starlette_admin.views import CustomView
 
+
 try:
     from starlette_admin.i18n import lazy_gettext as _
 except ImportError:

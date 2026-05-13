@@ -20,6 +20,7 @@ from .fields import MarkdownField, SlugField, TagsField
 from .models import Post, User
 from .views import HomeView, PostModelView, UserModelView
 
+
 try:
     from starlette_admin.i18n import lazy_gettext as _
 except ImportError:
