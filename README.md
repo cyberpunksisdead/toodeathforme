@@ -398,7 +398,7 @@ pip install fastapi-blog
 # Then create your own FastAPI app using the examples in the documentation
 ```
 
-### Option 2: Docker (Local Dockerfile)
+### Option 3: Docker (Local Dockerfile)
 
 Or into a Docker container using the local Dockerfile:
 
@@ -407,7 +407,7 @@ docker build -t fastapi-blog .
 docker run -d -p 8000:8000 fastapi-blog
 ```
 
-### Option 3: Docker (Prebuilt)
+### Option 4: Docker (Prebuilt)
 
 Or using a prebuilt Docker image from GitHub Container Registry:
 
