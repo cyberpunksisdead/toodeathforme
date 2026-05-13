@@ -17,19 +17,19 @@ Note: Admin panel is a web UI (not REST API), so it won't appear in /docs.
       If you need REST API for posts, see api_optional.py example.
 """
 
-import sys
+import sys  # noqa: I001
 
 # Clear any cached imports to ensure fresh load
 for mod in list(sys.modules.keys()):
     if mod.startswith('fastapi_blog'):
         del sys.modules[mod]
 
-from pathlib import Path
+from pathlib import Path  # noqa: E402
 
-from fastapi import FastAPI
-from fastapi.staticfiles import StaticFiles
+from fastapi import FastAPI  # noqa: E402
+from fastapi.staticfiles import StaticFiles  # noqa: E402
 
-import fastapi_blog
+import fastapi_blog  # noqa: E402
 
 
 # Create necessary directories

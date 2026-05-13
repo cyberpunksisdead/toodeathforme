@@ -266,9 +266,13 @@ def add_admin_to_app(
 
     # Get translated labels for the default locale
     home_label = gettext("Home")
+    user_label_singular = gettext("User")
     user_label_plural = gettext("Users")
-    # For button text, use genitive case (родительный падеж) for proper grammar
-    user_name_for_button = "пользователя" if i18n_default_locale == "ru" else "User"
+    # For button text "New %(name)s" / "Добавить %(name)s"
+    # Use lowercase singular for better grammar in Russian: "Добавить пользователя"
+    user_name_for_button = (
+        "пользователя" if i18n_default_locale == "ru" else user_label_singular
+    )
     posts_label = gettext("Posts")
 
     admin = Admin(
