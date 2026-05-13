@@ -172,14 +172,42 @@
 <script>
 // Add theme switcher to navbar after page loads
 document.addEventListener('DOMContentLoaded', function() {
-    // Find the navbar actions area
-    const navbar = document.querySelector('.navbar-nav');
-    if (navbar) {
-        // Create theme switcher element
-        const themeSwitcher = document.createElement('li');
-        themeSwitcher.className = 'nav-item';
-        themeSwitcher.innerHTML = `
-            <button class="theme-switcher nav-link" title="Toggle theme (Light/Dark/Auto)">
+    console.log('[Theme Switcher] Initializing...');
+    
+    // Try multiple selectors to find the right place to add the theme switcher
+    const selectors = [
+        '.navbar-nav',           // Standard Bootstrap navbar
+        '.navbar .navbar-nav',   // More specific
+        'nav.navbar ul',         // Generic nav approach
+        '.nav-item:last-child',  // Try to find existing nav items
+        'header nav',            // Header navigation
+        'header .navbar',        // Header navbar
+        '.navbar-collapse',      // Navbar collapse area
+    ];
+    
+    let navContainer = null;
+    
+    for (const selector of selectors) {
+        navContainer = document.querySelector(selector);
+        if (navContainer) {
+            console.log('[Theme Switcher] Found navbar using selector:', selector);
+            console.log('[Theme Switcher] Container element:', navContainer);
+            break;
+        }
+    }
+    
+    if (!navContainer) {
+        console.error('[Theme Switcher] Could not find navbar element');
+        console.log('[Theme Switcher] Available elements:');
+        console.log('  - nav elements:', document.querySelectorAll('nav'));
+        console.log('  - navbar elements:', document.querySelectorAll('.navbar'));
+        console.log('  - header elements:', document.querySelectorAll('header'));
+        
+        // Fallback: add to body as a floating button
+        const floatingButton = document.createElement('div');
+        floatingButton.style.cssText = 'position: fixed; top: 20px; right: 20px; z-index: 9999;';
+        floatingButton.innerHTML = `
+            <button class="theme-switcher btn btn-primary" title="Toggle theme (Light/Dark/Auto)" style="border-radius: 50%; width: 50px; height: 50px; padding: 0;">
                 <svg xmlns="http://www.w3.org/2000/svg" class="icon" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
                     <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
                     <path d="M3 5a1 1 0 0 1 1 -1h16a1 1 0 0 1 1 1v10a1 1 0 0 1 -1 1h-16a1 1 0 0 1 -1 -1v-10z" />
@@ -187,11 +215,30 @@ document.addEventListener('DOMContentLoaded', function() {
                     <path d="M9 16v4" />
                     <path d="M15 16v4" />
                 </svg>
-                <span class="theme-text">Auto</span>
             </button>
         `;
-        navbar.appendChild(themeSwitcher);
+        document.body.appendChild(floatingButton);
+        console.log('[Theme Switcher] Added as floating button');
+        return;
     }
+    
+    // Create theme switcher element
+    const themeSwitcher = document.createElement('li');
+    themeSwitcher.className = 'nav-item';
+    themeSwitcher.innerHTML = `
+        <button class="theme-switcher nav-link" title="Toggle theme (Light/Dark/Auto)">
+            <svg xmlns="http://www.w3.org/2000/svg" class="icon" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                <path d="M3 5a1 1 0 0 1 1 -1h16a1 1 0 0 1 1 1v10a1 1 0 0 1 -1 1h-16a1 1 0 0 1 -1 -1v-10z" />
+                <path d="M7 20h10" />
+                <path d="M9 16v4" />
+                <path d="M15 16v4" />
+            </svg>
+            <span class="theme-text">Auto</span>
+        </button>
+    `;
+    navContainer.appendChild(themeSwitcher);
+    console.log('[Theme Switcher] Added to navbar');
 });
 </script>
 {% endblock %}
