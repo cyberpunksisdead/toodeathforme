@@ -310,8 +310,8 @@ body,
         
         console.log('[Theme Switcher] Found navbar container:', navContainer);
         
-        (function(navContainer) {
-            console.log('[Theme Switcher] Adding to container:', navContainer);
+        (function(nav) {
+            console.log('[Theme Switcher] Adding to container:', nav);
             
             const themeSwitcher = document.createElement('div');
             themeSwitcher.className = 'nav-item';
@@ -328,7 +328,7 @@ body,
                 </button>
             `;
             
-            navContainer.insertBefore(themeSwitcher, navContainer.firstChild);
+            nav.insertBefore(themeSwitcher, nav.firstChild);
             
             const button = themeSwitcher.querySelector('.theme-switcher');
             if (button) {
@@ -344,7 +344,7 @@ body,
                     updateThemeIcon(nextTheme);
                 });
             }
-        })();
+        })(navContainer);
         
         console.log('[Theme Switcher] Added theme switcher to navbar');
         updateThemeIcon(getStoredTheme());
