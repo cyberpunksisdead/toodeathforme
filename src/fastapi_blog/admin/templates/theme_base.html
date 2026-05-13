@@ -3,6 +3,43 @@
 {% block head_css %}
 {{ super() }}
 <style>
+/* Smooth theme transitions */
+:root {
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+body,
+.card,
+.navbar,
+.table,
+.form-control,
+.form-select,
+.btn,
+.dropdown-menu,
+.list-group-item,
+.page-wrapper,
+.page-body {
+    transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+}
+
+/* Respect user's motion preferences */
+@media (prefers-reduced-motion: reduce) {
+    :root,
+    body,
+    .card,
+    .navbar,
+    .table,
+    .form-control,
+    .form-select,
+    .btn,
+    .dropdown-menu,
+    .list-group-item,
+    .page-wrapper,
+    .page-body {
+        transition: none;
+    }
+}
+
 /* Dark theme styles */
 [data-bs-theme="dark"] {
     --tblr-body-bg: #1e293b;
