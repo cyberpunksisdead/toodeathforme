@@ -3,40 +3,34 @@
 {% block head_css %}
 {{ super() }}
 <style>
-/* Smooth theme transitions */
+/* Theme transition configuration */
 :root {
-    transition: background-color 0.3s ease, color 0.3s ease;
+    --theme-transition-duration: 0.3s;
+    --theme-transition-timing: ease;
+    --theme-transition: 
+        background-color var(--theme-transition-duration) var(--theme-transition-timing),
+        color var(--theme-transition-duration) var(--theme-transition-timing),
+        border-color var(--theme-transition-duration) var(--theme-transition-timing),
+        box-shadow var(--theme-transition-duration) var(--theme-transition-timing);
 }
 
-body,
-.card,
-.navbar,
-.table,
-.form-control,
-.form-select,
-.btn,
-.dropdown-menu,
-.list-group-item,
-.page-wrapper,
-.page-body {
-    transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+/* Apply smooth transitions globally for theme changes */
+*,
+*::before,
+*::after {
+    transition: var(--theme-transition);
 }
 
 /* Respect user's motion preferences */
 @media (prefers-reduced-motion: reduce) {
-    :root,
-    body,
-    .card,
-    .navbar,
-    .table,
-    .form-control,
-    .form-select,
-    .btn,
-    .dropdown-menu,
-    .list-group-item,
-    .page-wrapper,
-    .page-body {
-        transition: none;
+    :root {
+        --theme-transition-duration: 0s;
+    }
+    
+    *,
+    *::before,
+    *::after {
+        transition: none !important;
     }
 }
 
