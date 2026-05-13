@@ -12,12 +12,10 @@ from starlette.templating import Jinja2Templates
 from starlette_admin.views import CustomView
 
 
-try:
-    from starlette_admin.i18n import lazy_gettext as _
-except ImportError:
-    # Fallback if i18n is not available
-    def _(message: str) -> str:
-        return message
+# Simple identity function - labels will be set dynamically per locale
+def _(message: str) -> str:
+    """Identity function. Labels are set dynamically in _create_admin_for_locale()."""
+    return message
 
 
 def get_posts_directory() -> str:
