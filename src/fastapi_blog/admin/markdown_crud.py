@@ -163,6 +163,58 @@ class MarkdownListView(CustomView):
             for p in posts
         ]
 
+        # Get current locale for translations
+        from starlette_admin.i18n import get_locale
+
+        locale = get_locale()
+
+        # Translations dictionary
+        translations = {
+            "ru": {
+                "posts": "Посты",
+                "admin": "Админ",
+                "new_post": "Новый пост",
+                "title": "Заголовок",
+                "slug": "URL",
+                "date": "Дата",
+                "status": "Статус",
+                "tags": "Теги",
+                "actions": "Действия",
+                "published": "Опубликовано",
+                "draft": "Черновик",
+                "edit": "Редактировать",
+                "delete": "Удалить",
+                "no_posts_found": "Посты не найдены.",
+                "create_first_post": "Создайте свой первый пост",
+                "delete_confirm": "Удалить пост",
+                "error": "Ошибка",
+                "failed_to_delete": "Не удалось удалить",
+            },
+            "en": {
+                "posts": "Posts",
+                "admin": "Admin",
+                "new_post": "New Post",
+                "title": "Title",
+                "slug": "Slug",
+                "date": "Date",
+                "status": "Status",
+                "tags": "Tags",
+                "actions": "Actions",
+                "published": "Published",
+                "draft": "Draft",
+                "edit": "Edit",
+                "delete": "Delete",
+                "no_posts_found": "No posts found.",
+                "create_first_post": "Create your first post",
+                "delete_confirm": "Delete post",
+                "error": "Error",
+                "failed_to_delete": "Failed to delete",
+            },
+        }
+
+        # Get translations for current locale (default to English)
+        t = translations.get(locale, translations["en"])
+
         return templates.TemplateResponse(
             request=request,
             name=self.template_path,
@@ -170,6 +222,7 @@ class MarkdownListView(CustomView):
                 "title": self.title(request),
                 "posts": posts_data,
                 "base_url": request.scope["root_path"],
+                "t": t,  # Add translations
             },
         )
 
