@@ -141,8 +141,58 @@ body,
     margin-right: 0.25rem;
 }
 
-/* User menu button - avatar spacing */
-.navbar-nav .btn.dropdown-toggle .avatar {
+/* Style user dropdown as button using Tabler classes */
+.navbar-nav .nav-item.dropdown > a.nav-link {
+    /* Make it look like .btn */
+    display: inline-flex;
+    align-items: center;
+    padding: 0.375rem 0.75rem;
+    font-size: 0.875rem;
+    font-weight: 400;
+    line-height: 1.4285714286;
+    color: inherit;
+    text-align: center;
+    text-decoration: none;
+    white-space: nowrap;
+    vertical-align: middle;
+    cursor: pointer;
+    user-select: none;
+    border: 1px solid rgba(98, 105, 118, 0.16);
+    border-radius: 4px;
+    background-color: #ffffff;
+    transition: color 0.15s ease-in-out, background-color 0.15s ease-in-out,
+                border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+.navbar-nav .nav-item.dropdown > a.nav-link:hover {
+    color: inherit;
+    background-color: rgba(32, 107, 196, 0.06);
+    border-color: rgba(98, 105, 118, 0.16);
+}
+
+[data-bs-theme="dark"] .navbar-nav .nav-item.dropdown > a.nav-link {
+    background-color: var(--tblr-card-bg);
+    border-color: var(--tblr-border-color);
+}
+
+[data-bs-theme="dark"] .navbar-nav .nav-item.dropdown > a.nav-link:hover {
+    background-color: rgba(255, 255, 255, 0.05);
+}
+
+/* Add dropdown arrow like .dropdown-toggle */
+.navbar-nav .nav-item.dropdown > a.nav-link::after {
+    display: inline-block;
+    margin-left: 0.255em;
+    vertical-align: 0.255em;
+    content: "";
+    border-top: 0.3em solid;
+    border-right: 0.3em solid transparent;
+    border-bottom: 0;
+    border-left: 0.3em solid transparent;
+}
+
+/* Avatar spacing */
+.navbar-nav .nav-item.dropdown > a.nav-link .avatar {
     margin-right: 0.5rem;
 }
 </style>
@@ -324,38 +374,6 @@ body,
         
         // Update all theme switcher icons to show current theme
         updateThemeIcon(getStoredTheme());
-        
-        // Transform user menu to button style (matching language switcher)
-        const userMenuLink = document.querySelector('.navbar-nav .nav-item.dropdown > a.nav-link[data-bs-toggle="dropdown"]');
-        if (userMenuLink) {
-            console.log('[Theme Switcher] Converting user menu to button style');
-            
-            // Get current content
-            const avatar = userMenuLink.querySelector('.avatar');
-            const username = userMenuLink.querySelector('div');
-            const dropdown = userMenuLink.nextElementSibling;
-            const parent = userMenuLink.parentElement;
-            
-            // Create new button element
-            const button = document.createElement('button');
-            button.type = 'button';
-            button.className = 'btn dropdown-toggle';
-            button.setAttribute('data-bs-toggle', 'dropdown');
-            
-            // Clone avatar and username
-            if (avatar) button.appendChild(avatar.cloneNode(true));
-            if (username) {
-                const span = document.createElement('span');
-                span.textContent = username.textContent.trim();
-                button.appendChild(span);
-            }
-            
-            // Replace link with button
-            parent.insertBefore(button, userMenuLink);
-            userMenuLink.remove();
-            
-            console.log('[Theme Switcher] User menu converted to button');
-        }
     });
 })();
 </script>
