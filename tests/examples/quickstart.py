@@ -49,7 +49,7 @@ fastapi_blog.add_blog_to_fastapi(
 )
 
 # Add admin panel (database auto-initialized on startup)
-# New API: creates /admin/ru and /admin/en, /admin redirects to /admin/ru
+# New API: creates /admin/en and /admin/ru, /admin redirects to /admin/en
 admins = fastapi_blog.add_admin_to_app(
     app,
     title="Blog Admin",
@@ -57,7 +57,7 @@ admins = fastapi_blog.add_admin_to_app(
     admin_password="Admin123!",
     secret_key="change-me-in-production",
     locales=["en", "ru"],
-    default_locale="ru",  # /admin → /admin/ru
+    default_locale="en",  # /admin → /admin/en
 )
 
 # Mount static files

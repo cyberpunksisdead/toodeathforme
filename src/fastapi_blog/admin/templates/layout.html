@@ -170,39 +170,92 @@ body,
 .navbar-nav .nav-item.dropdown > a.nav-link .avatar {
     margin-right: 0.5rem;
 }
+
+/* Custom language switcher styles */
+.custom-language-switcher {
+  margin-right: 0.5rem;
+}
+
+.custom-language-switcher .dropdown-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
 </style>
 {% endblock %}
 
-
-{% block footer_js %}
+{% block navbar %}
 {{ super() }}
+<!-- Custom language switcher (replaces built-in one) -->
 <script>
-// Language switcher: redirect between /admin/{locale} URLs instead of cookie+reload
-$(document).ready(function() {
-    $('.language-switcher-item').off('click').on('click', function(e) {
+(function() {
+  // Get current locale from URL
+  const pathMatch = window.location.pathname.match(/^\/admin\/([a-z]{2})(\/.*)?$/);
+  const currentLocale = pathMatch ? pathMatch[1] : 'en';
+  // Available locales - hardcoded for now
+  const availableLocales = ['en', 'ru'];
+  
+  // Locale display names
+  const localeNames = {
+    'en': 'English',
+    'ru': 'Русский'
+  };
+  
+  // Find navbar and add custom language switcher
+  document.addEventListener('DOMContentLoaded', function() {
+    const navbar = document.querySelector('.navbar.navbar-expand-md .navbar-nav.order-md-last');
+    if (!navbar || availableLocales.length <= 1) return;
+    
+    // Create custom switcher HTML
+    const switcherHTML = `
+      <div class="nav-item dropdown custom-language-switcher">
+        <button type="button" class="btn dropdown-toggle" data-bs-toggle="dropdown">
+          <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-language" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+            <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+            <path d="M4 5h7"></path>
+            <path d="M9 3v2c0 4.418 -2.239 8 -5 8"></path>
+            <path d="M5 9c-.003 2.144 2.952 3.908 6.7 4"></path>
+            <path d="M12 20l4 -9l4 9"></path>
+            <path d="M19.1 18h-6.2"></path>
+          </svg>
+          <span>${localeNames[currentLocale] || currentLocale.toUpperCase()}</span>
+        </button>
+        <div class="dropdown-menu">
+          ${availableLocales.map(lang => `
+            <a href="#" class="dropdown-item custom-language-item" data-lang="${lang}">
+              ${localeNames[lang] || lang.toUpperCase()}
+            </a>
+          `).join('')}
+        </div>
+      </div>
+    `;
+    
+    // Insert before other items
+    navbar.insertAdjacentHTML('afterbegin', switcherHTML);
+    
+    // Add click handlers
+    document.querySelectorAll('.custom-language-item').forEach(item => {
+      item.addEventListener('click', function(e) {
         e.preventDefault();
-        
-        const targetLocale = $(this).data('lang');
+        const targetLocale = this.getAttribute('data-lang');
         const currentPath = window.location.pathname;
-        
-        // Extract current locale from path: /admin/{locale}/...
         const pathMatch = currentPath.match(/^\/admin\/([a-z]{2})(\/.*)?$/);
         
         if (pathMatch) {
-            const currentLocale = pathMatch[1];
-            const restOfPath = pathMatch[2] || '';
-            
-            // Replace current locale with target locale
-            const newPath = `/admin/${targetLocale}${restOfPath}`;
-            
-            // Preserve query string if any
-            const queryString = window.location.search;
-            window.location.href = newPath + queryString;
+          const restOfPath = pathMatch[2] || '';
+          const newPath = `/admin/${targetLocale}${restOfPath}`;
+          const queryString = window.location.search;
+          window.location.href = newPath + queryString;
         } else {
-            // Fallback: just go to /admin/{locale}
-            window.location.href = `/admin/${targetLocale}`;
+          window.location.href = `/admin/${targetLocale}`;
         }
+      });
     });
-});
+  });
+})();
 </script>
+{% endblock %}
+
+{% block footer_js %}
+{{ super() }}
 {% endblock %}

@@ -93,24 +93,27 @@ def _create_admin_for_locale(
         Configured Admin instance
 
     """
-    from starlette_admin.i18n import gettext, set_locale
-
-    # Set locale for this admin instance
-    set_locale(locale)
-
-    # Configure i18n with language switcher if multiple locales available
+    # Configure i18n without built-in language switcher
+    # We'll use custom language switcher with URL redirects
+    # Each admin instance uses its own locale via I18nConfig
     i18n_config = I18nConfig(
         default_locale=locale,
-        language_switcher=available_locales if len(available_locales) > 1 else None,
+        language_switcher=None,  # Disabled - we use custom switcher
     )
 
-    # Get translated labels
-    home_label = gettext("Home")
-    user_label_singular = gettext("User")
-    user_label_plural = gettext("Users")
-    # Use lowercase genitive case for Russian: "Добавить пользователя"
-    user_name_for_button = "пользователя" if locale == "ru" else user_label_singular
-    posts_label = gettext("Posts")
+    # Labels are hardcoded per locale (not using gettext to avoid global state)
+    if locale == "ru":
+        home_label = "Главная"
+        user_label_singular = "Пользователь"
+        user_label_plural = "Пользователи"
+        user_name_for_button = "пользователя"  # Genitive case
+        posts_label = "Посты"
+    else:  # English
+        home_label = "Home"
+        user_label_singular = "User"
+        user_label_plural = "Users"
+        user_name_for_button = "User"
+        posts_label = "Posts"
 
     # Create admin instance
     admin = Admin(
@@ -256,7 +259,7 @@ def add_admin_to_app(
             )
             default_locale = i18n_default_locale
         else:
-            default_locale = "en"
+            default_locale = "en"  # Default to English
 
     if base_url is not None:
         warnings.warn(

@@ -28,7 +28,7 @@ admin = fastapi_blog.add_admin_to_app(
     admin_password="Admin123!",
     secret_key="change-me-in-production",
     i18n_enabled=True,
-    i18n_default_locale="ru",  # Russian by default
+    i18n_default_locale="en",  # English by default
     i18n_locales=["en", "ru"],  # Language switcher with EN/RU
 )
 
