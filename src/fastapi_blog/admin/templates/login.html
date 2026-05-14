@@ -7,8 +7,8 @@
 <script>
 // Language switcher utility for login page
 window.languageSwitcher = {
-  availableLocales: {{ available_locales | tojson }},
-  localeNames: {{ locale_names | tojson }},
+  availableLocales: {{ available_locales | tojson | safe }},
+  localeNames: {{ locale_names | tojson | safe }},
   currentLocale: '{{ current_locale }}',
   
   switchTo: function(targetLocale) {
@@ -221,8 +221,8 @@ window.languageSwitcher = {
 // Initialize languageSwitcher for login page
 if (!window.languageSwitcher) {
   window.languageSwitcher = {
-    availableLocales: {{ available_locales | tojson }},
-    localeNames: {{ locale_names | tojson }},
+    availableLocales: {{ available_locales | tojson | safe }},
+    localeNames: {{ locale_names | tojson | safe }},
     currentLocale: '{{ current_locale }}',
     
     switchTo: function(targetLocale) {

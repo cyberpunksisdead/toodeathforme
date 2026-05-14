@@ -6,8 +6,8 @@
 // Common language switching utility
 // Available in all pages via window.languageSwitcher
 window.languageSwitcher = {
-  availableLocales: {{ available_locales | tojson }},
-  localeNames: {{ locale_names | tojson }},
+  availableLocales: {{ available_locales | tojson | safe }},
+  localeNames: {{ locale_names | tojson | safe }},
   currentLocale: '{{ current_locale }}',
   
   // Switch to a different locale
