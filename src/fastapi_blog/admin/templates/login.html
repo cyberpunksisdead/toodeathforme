@@ -24,6 +24,18 @@
   gap: 0.5rem;
 }
 
+/* Ensure login form stays centered */
+.page {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+}
+
+.container-tight {
+  margin: 0 auto;
+}
+
 /* Theme transition */
 .page,
 .card,
@@ -191,6 +203,7 @@
   document.querySelectorAll('.login-language-item').forEach(item => {
     item.addEventListener('click', function(e) {
       e.preventDefault();
+      e.stopPropagation();
       const targetLocale = this.getAttribute('data-lang');
       const currentPath = window.location.pathname;
       const pathMatch = currentPath.match(/^\/admin\/([a-z]{2})(\/.*)?$/);
