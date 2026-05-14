@@ -278,7 +278,7 @@ body,
     });
     
     // Language Switcher
-    if (!ls || ls.availableLocales.length <= 1) return;
+    if (ls && ls.availableLocales.length > 1) {
     
     // Create custom switcher HTML
     const switcherHTML = `
@@ -315,6 +315,14 @@ body,
         ls.switchTo(targetLocale);
       });
     });
+    }
+    
+    // Remove starlette-admin's built-in theme switcher if present
+    const builtinThemeSwitcher = document.querySelector('[data-bs-theme-value]');
+    if (builtinThemeSwitcher) {
+      const parent = builtinThemeSwitcher.closest('.nav-item, .dropdown');
+      if (parent) parent.remove();
+    }
   });
 })();
 </script>
