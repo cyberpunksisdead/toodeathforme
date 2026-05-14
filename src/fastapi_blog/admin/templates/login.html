@@ -218,6 +218,35 @@ window.languageSwitcher = {
 </div>
 
 <script>
+// Initialize languageSwitcher for login page
+if (!window.languageSwitcher) {
+  window.languageSwitcher = {
+    availableLocales: {{ available_locales | tojson }},
+    localeNames: {{ locale_names | tojson }},
+    currentLocale: '{{ current_locale }}',
+    
+    switchTo: function(targetLocale) {
+      const currentPath = window.location.pathname;
+      const pathMatch = currentPath.match(/^\/admin\/([a-z]{2})(\/.*)?$/);
+      
+      if (pathMatch) {
+        const restOfPath = pathMatch[2] || '';
+        const newPath = `/admin/${targetLocale}${restOfPath}`;
+        const queryString = window.location.search;
+        window.location.href = newPath + queryString;
+      } else {
+        window.location.href = `/admin/${targetLocale}`;
+      }
+    },
+    
+    getLocaleName: function(locale) {
+      return this.localeNames[locale] || locale.toUpperCase();
+    }
+  };
+}
+</script>
+
+<script>
 (function() {
   // Theme Switcher Logic - Single Toggle Button
   const themes = ['auto', 'light', 'dark'];
