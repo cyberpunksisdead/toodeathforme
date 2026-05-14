@@ -29,6 +29,13 @@ except ImportError:
         return message
 
 
+# Locale display names for language switcher
+LOCALE_NAMES = {
+    "en": "English",
+    "ru": "Русский",
+}
+
+
 # NOTE: Custom translation loading removed - now we create separate admin instances
 # for each locale instead of dynamically switching translations
 
@@ -124,6 +131,11 @@ def _create_admin_for_locale(
         debug=os.getenv("DEBUG", "false").lower() == "true",
         index_view=HomeView(label=home_label, icon="fa fa-home"),
     )
+
+    # Add locale data to template context
+    admin.templates.env.globals["available_locales"] = available_locales
+    admin.templates.env.globals["locale_names"] = LOCALE_NAMES
+    admin.templates.env.globals["current_locale"] = locale
 
     # Add User view with translated labels
     user_view = UserModelView(User, icon="fa fa-users")

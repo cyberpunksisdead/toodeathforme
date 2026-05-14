@@ -1,5 +1,38 @@
 {% extends "@starlette-admin/layout.html" %}
 
+{% block head %}
+{{ super() }}
+<script>
+// Common language switching utility
+// Available in all pages via window.languageSwitcher
+window.languageSwitcher = {
+  availableLocales: {{ available_locales | tojson }},
+  localeNames: {{ locale_names | tojson }},
+  currentLocale: '{{ current_locale }}',
+  
+  // Switch to a different locale
+  switchTo: function(targetLocale) {
+    const currentPath = window.location.pathname;
+    const pathMatch = currentPath.match(/^\/admin\/([a-z]{2})(\/.*)?$/);
+    
+    if (pathMatch) {
+      const restOfPath = pathMatch[2] || '';
+      const newPath = `/admin/${targetLocale}${restOfPath}`;
+      const queryString = window.location.search;
+      window.location.href = newPath + queryString;
+    } else {
+      window.location.href = `/admin/${targetLocale}`;
+    }
+  },
+  
+  // Get display name for a locale
+  getLocaleName: function(locale) {
+    return this.localeNames[locale] || locale.toUpperCase();
+  }
+};
+</script>
+{% endblock %}
+
 {% block head_css %}
 {{ super() }}
 <style>
@@ -189,22 +222,13 @@ body,
 <!-- Custom language switcher (replaces built-in one) -->
 <script>
 (function() {
-  // Get current locale from URL
-  const pathMatch = window.location.pathname.match(/^\/admin\/([a-z]{2})(\/.*)?$/);
-  const currentLocale = pathMatch ? pathMatch[1] : 'en';
-  // Available locales - hardcoded for now
-  const availableLocales = ['en', 'ru'];
-  
-  // Locale display names
-  const localeNames = {
-    'en': 'English',
-    'ru': 'Русский'
-  };
+  const ls = window.languageSwitcher;
+  if (!ls || ls.availableLocales.length <= 1) return;
   
   // Find navbar and add custom language switcher
   document.addEventListener('DOMContentLoaded', function() {
     const navbar = document.querySelector('.navbar.navbar-expand-md .navbar-nav.order-md-last');
-    if (!navbar || availableLocales.length <= 1) return;
+    if (!navbar) return;
     
     // Create custom switcher HTML
     const switcherHTML = `
@@ -218,12 +242,12 @@ body,
             <path d="M12 20l4 -9l4 9"></path>
             <path d="M19.1 18h-6.2"></path>
           </svg>
-          <span>${localeNames[currentLocale] || currentLocale.toUpperCase()}</span>
+          <span>${ls.getLocaleName(ls.currentLocale)}</span>
         </button>
         <div class="dropdown-menu">
-          ${availableLocales.map(lang => `
+          ${ls.availableLocales.map(lang => `
             <a href="#" class="dropdown-item custom-language-item" data-lang="${lang}">
-              ${localeNames[lang] || lang.toUpperCase()}
+              ${ls.getLocaleName(lang)}
             </a>
           `).join('')}
         </div>
@@ -233,22 +257,12 @@ body,
     // Insert before other items
     navbar.insertAdjacentHTML('afterbegin', switcherHTML);
     
-    // Add click handlers
+    // Add click handlers using shared utility
     document.querySelectorAll('.custom-language-item').forEach(item => {
       item.addEventListener('click', function(e) {
         e.preventDefault();
         const targetLocale = this.getAttribute('data-lang');
-        const currentPath = window.location.pathname;
-        const pathMatch = currentPath.match(/^\/admin\/([a-z]{2})(\/.*)?$/);
-        
-        if (pathMatch) {
-          const restOfPath = pathMatch[2] || '';
-          const newPath = `/admin/${targetLocale}${restOfPath}`;
-          const queryString = window.location.search;
-          window.location.href = newPath + queryString;
-        } else {
-          window.location.href = `/admin/${targetLocale}`;
-        }
+        ls.switchTo(targetLocale);
       });
     });
   });

@@ -115,11 +115,12 @@
           <path d="M12 20l4 -9l4 9"></path>
           <path d="M19.1 18h-6.2"></path>
         </svg>
-        <span class="login-current-language">English</span>
+        <span class="login-current-language">{{ locale_names[current_locale] }}</span>
       </button>
       <div class="dropdown-menu">
-        <a href="#" class="dropdown-item login-language-item" data-lang="en">English</a>
-        <a href="#" class="dropdown-item login-language-item" data-lang="ru">Русский</a>
+        {% for lang in available_locales %}
+        <a href="#" class="dropdown-item login-language-item" data-lang="{{ lang }}">{{ locale_names[lang] }}</a>
+        {% endfor %}
       </div>
     </div>
   </div>
@@ -251,39 +252,25 @@
     }
   });
   
-  // Language Switcher Logic
-  const pathMatch = window.location.pathname.match(/^\/admin\/([a-z]{2})/);
-  const currentLocale = pathMatch ? pathMatch[1] : 'en';
-  const localeNames = {
-    'en': 'English',
-    'ru': 'Русский'
-  };
-  
-  // Update current language display
-  const currentLangSpan = document.querySelector('.login-current-language');
-  if (currentLangSpan) {
-    currentLangSpan.textContent = localeNames[currentLocale] || currentLocale.toUpperCase();
-  }
-  
-  // Language switcher click handlers
-  document.querySelectorAll('.login-language-item').forEach(item => {
-    item.addEventListener('click', function(e) {
-      e.preventDefault();
-      e.stopPropagation();
-      const targetLocale = this.getAttribute('data-lang');
-      const currentPath = window.location.pathname;
-      const pathMatch = currentPath.match(/^\/admin\/([a-z]{2})(\/.*)?$/);
-      
-      if (pathMatch) {
-        const restOfPath = pathMatch[2] || '';
-        const newPath = `/admin/${targetLocale}${restOfPath}`;
-        const queryString = window.location.search;
-        window.location.href = newPath + queryString;
-      } else {
-        window.location.href = `/admin/${targetLocale}/login`;
-      }
+  // Language Switcher Logic - using shared utility
+  const ls = window.languageSwitcher;
+  if (ls) {
+    // Update current language display
+    const currentLangSpan = document.querySelector('.login-current-language');
+    if (currentLangSpan) {
+      currentLangSpan.textContent = ls.getLocaleName(ls.currentLocale);
+    }
+    
+    // Language switcher click handlers
+    document.querySelectorAll('.login-language-item').forEach(item => {
+      item.addEventListener('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        const targetLocale = this.getAttribute('data-lang');
+        ls.switchTo(targetLocale);
+      });
     });
-  });
+  }
 })();
 </script>
 {% endblock %}
