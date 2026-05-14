@@ -26,16 +26,24 @@
   gap: 0.5rem;
 }
 
-/* Ensure login form stays centered */
+/* Ensure login form stays centered independently */
 .page {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  overflow: auto;
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 100vh;
 }
 
 .container-tight {
-  margin: 0 auto;
+  margin: auto;
+  max-width: 28rem;
+  width: 100%;
+  padding: 1rem;
 }
 
 /* Theme transition */
