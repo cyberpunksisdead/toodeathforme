@@ -2,6 +2,10 @@
 {% block header %}{% endblock %}
 {% block sidebar %}{% endblock %}
 
+{% block head %}
+{{ super() }}
+{% endblock %}
+
 {% block head_css %}
 {{ super() }}
 <style>
