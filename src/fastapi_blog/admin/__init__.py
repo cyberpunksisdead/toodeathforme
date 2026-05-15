@@ -85,6 +85,7 @@ def _create_admin_for_locale(
     auth_provider,
     templates_dir: str,
     available_locales: list[str],
+    enable_role_management: bool = False,
 ) -> Admin:
     """Create an Admin instance for a specific locale.
 
@@ -389,6 +390,7 @@ def add_admin_to_app(
             auth_provider=auth_provider,
             templates_dir=templates_dir,
             available_locales=locales,
+            enable_role_management=enable_role_management,
         )
 
         # Mount to app
