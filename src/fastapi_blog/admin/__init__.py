@@ -97,6 +97,7 @@ def _create_admin_for_locale(
         auth_provider: Authentication provider instance
         templates_dir: Path to custom templates directory
         available_locales: List of all available locales for language switcher
+        enable_role_management: Whether to automatically add role management views
 
     Returns:
         Configured Admin instance
