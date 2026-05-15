@@ -20,19 +20,18 @@ Login credentials (from environment variables):
     Password: mypass123 (or default 'Admin123!')
 """
 
-import sys
+import sys  # noqa: I001
 from pathlib import Path
-
-
-# Clear any cached imports
-for mod in list(sys.modules.keys()):
-    if mod.startswith("fastapi_blog"):
-        del sys.modules[mod]
 
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 
 import fastapi_blog
+
+# Clear any cached imports
+for mod in list(sys.modules.keys()):
+    if mod.startswith("fastapi_blog"):
+        del sys.modules[mod]
 
 
 # Create necessary directories

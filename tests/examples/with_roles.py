@@ -15,20 +15,19 @@ Note: This example shows how to set up role management views.
       in your auth provider (see RoleBasedAuthProvider).
 """
 
-import sys
+import sys  # noqa: I001
 from pathlib import Path
-
-
-# Clear any cached imports
-for mod in list(sys.modules.keys()):
-    if mod.startswith("fastapi_blog"):
-        del sys.modules[mod]
 
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 
 import fastapi_blog
 from fastapi_blog.admin import RoleModelView, UserWithRolesModelView
+
+# Clear any cached imports
+for mod in list(sys.modules.keys()):
+    if mod.startswith("fastapi_blog"):
+        del sys.modules[mod]
 
 
 # Create necessary directories
