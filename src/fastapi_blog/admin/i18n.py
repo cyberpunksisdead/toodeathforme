@@ -215,4 +215,5 @@ class TranslationSection:
           Translated string or default value
 
         """
-        return self._data.get(name, default)
+        result = self._data.get(name, default)
+        return str(result) if result is not None else (default or "")

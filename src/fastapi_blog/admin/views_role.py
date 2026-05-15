@@ -17,8 +17,8 @@ class RoleModelView(ModelView):
     label = "Roles"
     icon = "fa fa-shield"
 
-    # Fields to display
-    fields = [
+    # Fields to display (using Any to avoid mypy errors with starlette-admin)
+    fields: list = [
         "id",
         "name",
         "description",
@@ -92,8 +92,8 @@ class UserWithRolesModelView(ModelView):
     label = "Users with Roles"
     icon = "fa fa-users"
 
-    # Fields to display
-    fields = [
+    # Fields to display (using Any to avoid mypy errors with starlette-admin)
+    fields: list = [
         "id",
         "email",
         "hashed_password",
