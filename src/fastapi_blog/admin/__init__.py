@@ -111,10 +111,10 @@ def _create_admin_for_locale(
 
     # Load translations from YAML files
     translations = load_translations(locale)
-    home_label = translations['nav']['home']
-    user_label = translations['nav']['users']
-    user_name_for_button = translations['user']['singular']
-    posts_label = translations['nav']['posts']
+    home_label = translations["nav"]["home"]
+    user_label = translations["nav"]["users"]
+    user_name_for_button = translations["user"]["singular"]
+    posts_label = translations["nav"]["posts"]
 
     # Create admin instance
     admin = Admin(
